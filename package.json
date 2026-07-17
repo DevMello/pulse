@@ -1,0 +1,42 @@
+{
+  "name": "pulse",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A tiny, privacy-first, self-hostable analytics engine with revenue tracking and a public stats page.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build:tracker && next dev",
+    "build": "npm run build:tracker && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "build:tracker": "node scripts/build-tracker.mjs",
+    "size": "node scripts/build-tracker.mjs --report",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.47.10",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "stripe": "^17.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "esbuild": "^0.24.2",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
