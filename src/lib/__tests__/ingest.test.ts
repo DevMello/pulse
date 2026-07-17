@@ -247,6 +247,20 @@ describe('extractProps', () => {
     expect(props).toEqual({ ok: 'yes' });
   });
 
+  it('extracts revenue even when it follows more props than the cap allows', () => {
+    // Regression: revenue used to be lifted during iteration, so the props-count
+    // cap could break out of the loop before reaching a trailing `revenue` key
+    // and silently discard a real sale.
+    const many: Record<string, unknown> = {};
+    for (let i = 0; i < 40; i++) many[`p${i}`] = i;
+    many.revenue = { amount: 29, currency: 'USD' };
+
+    const { revenue, props } = extractProps(many);
+    expect(revenue).toEqual({ amount: 29, currency: 'USD', amountMinor: 2900 });
+    expect(Object.keys(props ?? {}).length).toBeLessThanOrEqual(24);
+    expect(props).not.toHaveProperty('revenue');
+  });
+
   it('returns null for empty or non-object input', () => {
     expect(extractProps(null).props).toBeNull();
     expect(extractProps({}).props).toBeNull();

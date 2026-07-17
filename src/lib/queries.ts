@@ -4,11 +4,15 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * Dashboard reads.
  *
  * Everything here goes through `rollups` / `rollup_dimensions`, never `events` —
- * that is the whole reason the rollup tables exist (Section 7). The one
- * exception is realtime, which is bounded to minutes and hits an index.
+ * that is the whole reason the rollup tables exist (Section 7). Realtime is the
+ * one exception and lives in the client component that needs it.
+ *
+ * Aggregation happens in Postgres via the pulse_owner_* functions, not in JS.
+ * PostgREST caps every response at 1000 rows, so summing fetched rows here
+ * silently truncated past that and produced wrong numbers with no error.
  *
  * Every function runs under the owner's session, so RLS scopes the rows. The
- * `.eq('project_id', …)` filters are for correctness, not security.
+ * project_id filters are for correctness, not security.
  */
 
 export interface Project {
@@ -108,7 +112,17 @@ export async function getProjectBySlug(db: SupabaseClient, slug: string): Promis
   return (data as Project) ?? null;
 }
 
-/** Rollup rows for the given projects and window. */
+/**
+ * Rollup series for the given projects and window.
+ *
+ * Aggregated by Postgres, not here. Selecting the raw rows and summing them in
+ * JS silently truncates: PostgREST caps every response at 1000 rows, so a
+ * 12-month range across three projects (365 x 3 = 1095 rows) would drop the
+ * overflow and report a wrong total with no error. Grouping in SQL returns one
+ * row per bucket — at most 366 — and never approaches the cap.
+ *
+ * The RPC is security invoker, so RLS still scopes it to the owner's projects.
+ */
 export async function getSeries(
   db: SupabaseClient,
   projectIds: string[],
@@ -116,36 +130,25 @@ export async function getSeries(
 ): Promise<SeriesPoint[]> {
   if (projectIds.length === 0) return [];
 
-  const { data, error } = await db
-    .from('rollups')
-    .select('bucket, pageviews, visitors, sessions, bounces, duration_sec, events, revenue_cents')
-    .in('project_id', projectIds)
-    .eq('period', range.period)
-    .gte('bucket', range.from.toISOString())
-    .lte('bucket', range.to.toISOString())
-    .order('bucket', { ascending: true });
+  const { data, error } = await db.rpc('pulse_owner_series', {
+    p_project_ids: projectIds,
+    p_period: range.period,
+    p_from: range.from.toISOString(),
+    p_to: range.to.toISOString(),
+  });
 
   if (error) throw new Error(`Failed to load series: ${error.message}`);
 
-  // Several projects can share a bucket; merge them so a combined view sums.
-  const merged = new Map<string, SeriesPoint>();
-  for (const row of data ?? []) {
-    const key = row.bucket as string;
-    const existing = merged.get(key);
-    if (existing) {
-      existing.pageviews += row.pageviews;
-      existing.visitors += row.visitors;
-      existing.sessions += row.sessions;
-      existing.bounces += row.bounces;
-      existing.duration_sec += row.duration_sec;
-      existing.events += row.events;
-      existing.revenue_cents += row.revenue_cents;
-    } else {
-      merged.set(key, { ...(row as unknown as SeriesPoint), bucket: key });
-    }
-  }
-
-  return [...merged.values()].sort((a, b) => a.bucket.localeCompare(b.bucket));
+  return (data ?? []).map((row: Record<string, number | string>) => ({
+    bucket: String(row.bucket),
+    pageviews: Number(row.pageviews),
+    visitors: Number(row.visitors),
+    sessions: Number(row.sessions),
+    bounces: Number(row.bounces),
+    duration_sec: Number(row.duration_sec),
+    events: Number(row.events),
+    revenue_cents: Number(row.revenue_cents),
+  }));
 }
 
 /**
@@ -198,6 +201,15 @@ export interface DimensionRow {
   revenue_cents: number;
 }
 
+/**
+ * Top values for a dimension.
+ *
+ * Grouped and limited by Postgres. Doing it here meant fetching every matching
+ * rollup_dimensions row first, which PostgREST truncates at 1000 — on 60 days
+ * of demo data that table already held 65k rows, so a top-pages list was being
+ * computed from an arbitrary 1000-row slice and was simply wrong. Ranking has
+ * to happen where all the rows are.
+ */
 export async function getBreakdown(
   db: SupabaseClient,
   projectIds: string[],
@@ -207,81 +219,23 @@ export async function getBreakdown(
 ): Promise<DimensionRow[]> {
   if (projectIds.length === 0) return [];
 
-  const { data, error } = await db
-    .from('rollup_dimensions')
-    .select('value, hits, visitors, revenue_cents')
-    .in('project_id', projectIds)
-    .eq('dimension', dimension)
-    .eq('period', range.period)
-    .gte('bucket', range.from.toISOString())
-    .lte('bucket', range.to.toISOString());
+  const { data, error } = await db.rpc('pulse_owner_breakdown', {
+    p_project_ids: projectIds,
+    p_dimension: dimension,
+    p_period: range.period,
+    p_from: range.from.toISOString(),
+    p_to: range.to.toISOString(),
+    p_limit: limit,
+  });
 
   if (error) throw new Error(`Failed to load ${dimension}: ${error.message}`);
 
-  // Aggregate across buckets in JS. The alternative is a SQL GROUP BY per
-  // dimension via an RPC; at rollup scale (a few hundred rows) this is faster
-  // than the round trip and keeps the query surface small.
-  const totals = new Map<string, DimensionRow>();
-  for (const row of data ?? []) {
-    const existing = totals.get(row.value);
-    if (existing) {
-      existing.hits += row.hits;
-      existing.visitors += row.visitors;
-      existing.revenue_cents += row.revenue_cents;
-    } else {
-      totals.set(row.value, { ...(row as DimensionRow) });
-    }
-  }
-
-  return [...totals.values()].sort((a, b) => b.hits - a.hits).slice(0, limit);
-}
-
-export interface RealtimeSnapshot {
-  online: number;
-  recentEvents: Array<{ name: string; path: string | null; country: string | null; ts: string }>;
-  perMinute: number[];
-}
-
-/**
- * Realtime. The only dashboard read that touches `events`, bounded to 30
- * minutes so it stays on the (project_id, ts desc) index.
- */
-export async function getRealtime(db: SupabaseClient, projectIds: string[]): Promise<RealtimeSnapshot> {
-  if (projectIds.length === 0) return { online: 0, recentEvents: [], perMinute: [] };
-
-  const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-  const { data, error } = await db
-    .from('events')
-    .select('name, path, country, ts, visitor_hash')
-    .in('project_id', projectIds)
-    .gte('ts', since)
-    .order('ts', { ascending: false })
-    .limit(500);
-
-  if (error) throw new Error(`Failed to load realtime: ${error.message}`);
-
-  const rows = data ?? [];
-  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-
-  const online = new Set(
-    rows.filter((r) => new Date(r.ts).getTime() > fiveMinutesAgo).map((r) => r.visitor_hash)
-  ).size;
-
-  // 30 one-minute buckets, oldest first.
-  const perMinute = new Array(30).fill(0);
-  const now = Date.now();
-  for (const row of rows) {
-    const age = Math.floor((now - new Date(row.ts).getTime()) / 60_000);
-    if (age >= 0 && age < 30) perMinute[29 - age] += 1;
-  }
-
-  return {
-    online,
-    perMinute,
-    recentEvents: rows.slice(0, 12).map((r) => ({
-      name: r.name, path: r.path, country: r.country, ts: r.ts,
-    })),
-  };
+  return (data ?? []).map((row: Record<string, number | string>) => ({
+    value: String(row.value),
+    hits: Number(row.hits),
+    visitors: Number(row.visitors),
+    revenue_cents: Number(row.revenue_cents),
+  }));
 }
 
 export interface RevenueRecord {
@@ -332,16 +286,13 @@ export async function getRevenueRecords(
 export async function getMrrProxy(db: SupabaseClient, projectIds: string[]): Promise<number> {
   if (projectIds.length === 0) return 0;
 
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await db
-    .from('revenue_records')
-    .select('amount_base_cents')
-    .in('project_id', projectIds)
-    .eq('kind', 'subscription')
-    .gte('occurred_at', since);
+  // Summed in SQL: fetching the rows and adding them up here would truncate at
+  // the 1000-row response cap and understate MRR for anyone with a real
+  // subscription base.
+  const { data, error } = await db.rpc('pulse_owner_mrr', { p_project_ids: projectIds });
 
   if (error) return 0;
-  return (data ?? []).reduce((sum, r) => sum + r.amount_base_cents, 0);
+  return Number(data ?? 0);
 }
 
 export interface Goal {

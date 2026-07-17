@@ -50,10 +50,15 @@ export async function GET(request: Request) {
  * Only same-origin relative paths. Redirecting to an attacker-supplied absolute
  * URL right after establishing a session is a textbook open redirect, and the
  * `next` parameter is fully user-controlled.
+ *
+ * Allow-list rather than deny-list: `next` must start with a single "/" followed
+ * by a character that can't begin an authority. A deny-list here is a trap —
+ * blocking "//host" alone still lets "/\host" and "/%2Fhost" through, because
+ * browsers normalize a backslash to a forward slash before parsing.
  */
 function safeNext(next: string | null): string {
   if (!next) return '/app';
-  if (!next.startsWith('/') || next.startsWith('//')) return '/app';
+  if (!/^\/[A-Za-z0-9_\-]/.test(next)) return '/app';
   return next;
 }
 

@@ -4,6 +4,7 @@ import { Sparkline } from '@/components/ui';
 import { LiveCount } from './live-count';
 import { Methodology } from './methodology';
 import { RangeLinks } from './range-links';
+import { Breakdowns } from './breakdowns';
 import { formatMoneyCompact, displayCurrency } from '@/lib/money';
 
 /**
@@ -234,6 +235,9 @@ function ProjectCard({
       ) : (
         <div className="h-4" />
       )}
+
+      {/* Renders nothing unless the owner published at least one dimension. */}
+      <Breakdowns slug={project.slug} days={days} />
     </article>
   );
 }

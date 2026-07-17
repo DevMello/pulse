@@ -221,14 +221,17 @@ export function extractProps(input: unknown): {
   }
 
   const source = input as Record<string, unknown>;
-  let revenue: RevenueClaim | null = null;
   const props: Record<string, unknown> = {};
 
+  // Revenue is lifted out before the loop, not inside it. Extracting it during
+  // iteration meant the props-count cap could `break` before reaching a
+  // `revenue` key that happened to come last — silently dropping a real sale
+  // because the caller also sent 24 custom properties. Money must not depend on
+  // key order.
+  const revenue = parseRevenue(source.revenue);
+
   for (const [key, value] of Object.entries(source)) {
-    if (key === 'revenue') {
-      revenue = parseRevenue(value);
-      continue;
-    }
+    if (key === 'revenue') continue;
     if (Object.keys(props).length >= MAX_PROPS_KEYS) break;
 
     // Only scalars. Nested objects would let a caller push unbounded JSON into
