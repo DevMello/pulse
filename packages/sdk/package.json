@@ -1,0 +1,55 @@
+{
+  "name": "@pulse/sdk",
+  "version": "0.1.0",
+  "description": "Typed client for Pulse — privacy-first analytics with revenue tracking.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "import": "./dist/vue.js",
+      "require": "./dist/vue.cjs"
+    },
+    "./svelte": {
+      "types": "./dist/svelte.d.ts",
+      "import": "./dist/svelte.js",
+      "require": "./dist/svelte.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "node build.mjs && tsc --emitDeclarationOnly --declaration --outDir dist",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=17"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.7",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.3"
+  },
+  "keywords": ["analytics", "privacy", "cookieless", "revenue", "self-hosted"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevMello/pulse.git",
+    "directory": "packages/sdk"
+  }
+}
