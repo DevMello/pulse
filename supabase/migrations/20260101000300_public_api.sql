@@ -334,9 +334,20 @@ grant execute on function pulse_public_overview(int)                   to anon, 
 grant execute on function pulse_public_breakdown(text, text, int, int)  to anon, authenticated;
 grant execute on function pulse_public_live(text)                      to anon, authenticated;
 
--- The owner's own helpers stay off the anon role.
+-- Maintenance functions are off-limits to both API roles...
 revoke all on function pulse_rollup(text, timestamptz, timestamptz) from public, anon, authenticated;
 revoke all on function pulse_backfill(int)     from public, anon, authenticated;
 revoke all on function pulse_prune()           from public, anon, authenticated;
 revoke all on function pulse_rollup_recent()   from public, anon, authenticated;
+
+-- ...except pulse_rollup_recent, which the owner may trigger.
+--
+-- Without this, a manually-entered sale is invisible until cron runs, which
+-- reads as "the form silently didn't work" and invites double entry — a worse
+-- outcome than the cost of the call. It stays revoked from anon: it is the one
+-- genuinely expensive function here, and anon has no reason to ever roll up.
+grant execute on function pulse_rollup_recent() to authenticated;
+
+-- The salt is readable by nothing. This is the value that could unwind the
+-- anonymization, so not even the owner's session may fetch it.
 revoke all on function current_visitor_salt()  from public, anon, authenticated;

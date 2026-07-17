@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+/**
+ * Pulse design tokens.
+ *
+ * One restrained palette shared by the dashboard and the public page, so the
+ * showcase looks like the product rather than a separate site. Dark by default:
+ * the public page is usually embedded in a developer's own dark portfolio, and
+ * the dashboard is looked at late at night.
+ */
+@theme {
+  --color-ink-950: oklch(0.15 0.012 260);
+  --color-ink-900: oklch(0.19 0.014 260);
+  --color-ink-850: oklch(0.23 0.015 260);
+  --color-ink-800: oklch(0.28 0.016 260);
+  --color-ink-700: oklch(0.38 0.017 260);
+  --color-ink-600: oklch(0.50 0.017 260);
+  --color-ink-500: oklch(0.62 0.016 260);
+  --color-ink-400: oklch(0.72 0.014 260);
+  --color-ink-300: oklch(0.82 0.010 260);
+  --color-ink-200: oklch(0.90 0.007 260);
+  --color-ink-100: oklch(0.95 0.005 260);
+  --color-ink-50:  oklch(0.98 0.003 260);
+
+  --color-pulse-400: oklch(0.78 0.16 155);
+  --color-pulse-500: oklch(0.72 0.18 155);
+  --color-pulse-600: oklch(0.64 0.17 155);
+
+  --color-money-400: oklch(0.80 0.15 85);
+  --color-money-500: oklch(0.74 0.16 85);
+
+  --color-danger-400: oklch(0.70 0.19 25);
+  --color-danger-500: oklch(0.62 0.21 25);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-ink-950);
+  color: var(--color-ink-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular numerals everywhere numbers live. Proportional digits make a
+   changing realtime count jitter horizontally, which reads as instability. */
+.nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Respect the visitor's motion preference. The public page has a live counter
+   and sparklines; none of it is worth triggering someone's vestibular disorder. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Keyboard focus must stay visible; these pages are dense and easy to get lost in. */
+:focus-visible {
+  outline: 2px solid var(--color-pulse-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-pulse-600);
+  color: var(--color-ink-950);
+}
+
+/* Subtle scrollbars, dark-appropriate. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-800) transparent;
+}
