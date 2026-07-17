@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 import {
   getProjectBySlug, getSeries, getBreakdown, sumTotals, resolveRange,
-  previousRange, pctChange, fillSeries, getRevenueRecords, getMrrProxy,
+  previousRange, pctChange, fillSeries, getRevenueRecords, getMrr,
 } from '@/lib/queries';
 import { Card, CardHeader, Stat, Sparkline, BarList, Empty, Badge } from '@/components/ui';
 import { RangePicker } from '@/components/range-picker';
@@ -34,7 +34,7 @@ export default async function RevenuePage({
     getSeries(db, ids, prev),
     getBreakdown(db, ids, 'revenue_source', range, 10),
     getRevenueRecords(db, ids, range, 50),
-    getMrrProxy(db, ids),
+    getMrr(db, ids),
   ]);
 
   const totals = sumTotals(series);
@@ -59,7 +59,7 @@ export default async function RevenuePage({
       </div>
 
       <Card>
-        <div className="grid grid-cols-2 divide-ink-850 sm:grid-cols-4 sm:divide-x">
+        <div className="grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
           <Stat
             label="Revenue"
             value={formatMoneyCompact(totals.revenue_cents, currency)}
@@ -67,7 +67,7 @@ export default async function RevenuePage({
             hint="net of refunds"
             accent="money"
           />
-          <Stat label="MRR" value={formatMoneyCompact(mrr, currency)} hint="trailing 30d subs" accent="money" />
+          <Stat label="MRR" value={formatMoneyCompact(mrr, currency)} hint="active subs, monthly rate" accent="money" />
           <Stat
             label="Per visitor"
             value={rpv === null ? '—' : formatMoney(Math.round(rpv), currency)}
@@ -76,7 +76,7 @@ export default async function RevenuePage({
           />
           <Stat label="Transactions" value={String(records.length)} hint={`in ${range.label.toLowerCase()}`} />
         </div>
-        <div className="border-t border-ink-850 px-1 pt-2 pb-1">
+        <div className="border-t border-border px-1 pt-2 pb-1">
           <Sparkline
             points={filled.map((p) => p.revenue_cents)}
             height={90}
@@ -88,7 +88,7 @@ export default async function RevenuePage({
       </Card>
 
       {unconverted.length > 0 ? (
-        <div className="rounded-lg border border-money-500/30 bg-money-500/5 px-4 py-3 text-xs text-money-400">
+        <div className="rounded-lg border border-warn-600/25 bg-warn-500/8 px-4 py-3 text-xs text-warn-700">
           No exchange rate configured for {unconverted.join(', ')}. Those amounts are counted at face
           value in the {currency} total, which overstates or understates it. Set{' '}
           <code className="font-mono">PULSE_FX_RATES</code> to fix.
@@ -126,7 +126,7 @@ export default async function RevenuePage({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-ink-850 text-left text-xs text-ink-600">
+                <tr className="border-b border-border text-left text-xs text-text-subtle">
                   <th className="px-4 py-2 font-medium">When</th>
                   <th className="px-4 py-2 font-medium">Source</th>
                   <th className="px-4 py-2 font-medium">Kind</th>
@@ -135,27 +135,27 @@ export default async function RevenuePage({
                   <th className="px-4 py-2" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-ink-850/60">
+              <tbody className="divide-y divide-border">
                 {records.map((r) => (
-                  <tr key={r.id} className="text-ink-300">
-                    <td className="px-4 py-2 whitespace-nowrap text-ink-500">
+                  <tr key={r.id} className="text-text">
+                    <td className="px-4 py-2 whitespace-nowrap text-text-subtle">
                       {new Date(r.occurred_at).toLocaleDateString(undefined, {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
                       })}
                     </td>
                     <td className="px-4 py-2">
                       {r.label ?? titleCase(r.source)}
-                      {r.note ? <span className="ml-2 text-xs text-ink-600">{r.note}</span> : null}
+                      {r.note ? <span className="ml-2 text-xs text-text-subtle">{r.note}</span> : null}
                     </td>
                     <td className="px-4 py-2">
                       <Badge tone={r.amount_cents < 0 ? 'warn' : r.kind === 'subscription' ? 'good' : 'neutral'}>
                         {r.kind.replace('_', ' ')}
                       </Badge>
                     </td>
-                    <td className={`nums px-4 py-2 text-right ${r.amount_cents < 0 ? 'text-danger-400' : 'text-ink-200'}`}>
+                    <td className={`nums px-4 py-2 text-right ${r.amount_cents < 0 ? 'text-danger-600' : 'text-text'}`}>
                       {formatMoney(r.amount_cents, r.currency)}
                     </td>
-                    <td className="nums px-4 py-2 text-right text-ink-500">
+                    <td className="nums px-4 py-2 text-right text-text-subtle">
                       {r.currency === r.base_currency ? '—' : formatMoney(r.amount_base_cents, r.base_currency)}
                     </td>
                     <td className="px-4 py-2 text-right">

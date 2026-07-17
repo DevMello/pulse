@@ -15,7 +15,7 @@ import type { Project } from '@/lib/queries';
  */
 export function DangerZone({ project }: { project: Project }) {
   return (
-    <div className="divide-y divide-ink-850">
+    <div className="divide-y divide-border">
       <RotateKey project={project} />
       <ArchiveToggle project={project} />
       <PurgeData project={project} />
@@ -30,10 +30,10 @@ function RotateKey({ project }: { project: Project }) {
 
   return (
     <div className="p-4">
-      <h3 className="text-sm font-medium text-ink-200">Rotate ingest key</h3>
-      <p className="mt-1 text-xs leading-relaxed text-ink-600">
+      <h3 className="text-sm font-medium text-text">Rotate ingest key</h3>
+      <p className="mt-1 text-xs leading-relaxed text-text-subtle">
         Issues a new key and invalidates the current one. Every site still using the old snippet
-        stops recording immediately and <strong className="text-ink-400">without any error</strong> —
+        stops recording immediately and <strong className="text-text-muted">without any error</strong> —
         the collector ignores unknown keys on purpose. Update your snippet everywhere first.
       </p>
 
@@ -41,7 +41,7 @@ function RotateKey({ project }: { project: Project }) {
         <form action={action} className="mt-3 flex items-center gap-2">
           <input type="hidden" name="id" value={project.id} />
           <SubmitButton variant="danger">Rotate now</SubmitButton>
-          <button type="button" onClick={() => setArmed(false)} className="text-xs text-ink-500 hover:text-ink-300">
+          <button type="button" onClick={() => setArmed(false)} className="text-xs text-text-subtle hover:text-text">
             Cancel
           </button>
         </form>
@@ -49,7 +49,7 @@ function RotateKey({ project }: { project: Project }) {
         <button
           type="button"
           onClick={() => setArmed(true)}
-          className="mt-3 rounded-lg border border-ink-800 bg-ink-850 px-3 py-1.5 text-xs text-ink-300 hover:bg-ink-800"
+          className="mt-3 rounded-lg border border-border-strong bg-surface-sunken px-3 py-1.5 text-xs text-text hover:bg-surface-sunken"
         >
           Rotate key
         </button>
@@ -69,8 +69,8 @@ function ArchiveToggle({ project }: { project: Project }) {
       <input type="hidden" name="id" value={project.id} />
       <input type="hidden" name="archived" value={String(!project.archived)} />
 
-      <h3 className="text-sm font-medium text-ink-200">{project.archived ? 'Unarchive' : 'Archive'}</h3>
-      <p className="mt-1 text-xs leading-relaxed text-ink-600">
+      <h3 className="text-sm font-medium text-text">{project.archived ? 'Unarchive' : 'Archive'}</h3>
+      <p className="mt-1 text-xs leading-relaxed text-text-subtle">
         {project.archived
           ? 'Restore this project to your dashboard and resume collecting events.'
           : 'Hides the project and stops accepting new events. Existing data is untouched and you can undo this at any time.'}
@@ -90,8 +90,8 @@ function PurgeData({ project }: { project: Project }) {
 
   return (
     <div className="p-4">
-      <h3 className="text-sm font-medium text-ink-200">Purge raw events</h3>
-      <p className="mt-1 text-xs leading-relaxed text-ink-600">
+      <h3 className="text-sm font-medium text-text">Purge raw events</h3>
+      <p className="mt-1 text-xs leading-relaxed text-text-subtle">
         Deletes every individual event row for this project. Your rollups survive, so charts and
         totals stay intact — only realtime and export lose their depth. Useful for honoring a
         deletion request or reclaiming storage.
@@ -104,7 +104,7 @@ function PurgeData({ project }: { project: Project }) {
           <TextInput name="confirm" placeholder={`Type “${project.name}” to confirm`} autoComplete="off" />
           <div className="flex items-center gap-2">
             <SubmitButton variant="danger">Purge events</SubmitButton>
-            <button type="button" onClick={() => setArmed(false)} className="text-xs text-ink-500 hover:text-ink-300">
+            <button type="button" onClick={() => setArmed(false)} className="text-xs text-text-subtle hover:text-text">
               Cancel
             </button>
           </div>
@@ -113,7 +113,7 @@ function PurgeData({ project }: { project: Project }) {
         <button
           type="button"
           onClick={() => setArmed(true)}
-          className="mt-3 rounded-lg border border-ink-800 bg-ink-850 px-3 py-1.5 text-xs text-ink-300 hover:bg-ink-800"
+          className="mt-3 rounded-lg border border-border-strong bg-surface-sunken px-3 py-1.5 text-xs text-text hover:bg-surface-sunken"
         >
           Purge raw events
         </button>
@@ -131,8 +131,8 @@ function DeleteProject({ project }: { project: Project }) {
 
   return (
     <div className="p-4">
-      <h3 className="text-sm font-medium text-danger-400">Delete project</h3>
-      <p className="mt-1 text-xs leading-relaxed text-ink-600">
+      <h3 className="text-sm font-medium text-danger-600">Delete project</h3>
+      <p className="mt-1 text-xs leading-relaxed text-text-subtle">
         Removes the project and everything attached to it — events, revenue records, rollups, and
         history. There is no undo and no backup. Archiving is almost always what you want instead.
       </p>
@@ -144,7 +144,7 @@ function DeleteProject({ project }: { project: Project }) {
           <TextInput name="confirm" placeholder={`Type “${project.name}” to confirm`} autoComplete="off" />
           <div className="flex items-center gap-2">
             <SubmitButton variant="danger">Delete permanently</SubmitButton>
-            <button type="button" onClick={() => setArmed(false)} className="text-xs text-ink-500 hover:text-ink-300">
+            <button type="button" onClick={() => setArmed(false)} className="text-xs text-text-subtle hover:text-text">
               Cancel
             </button>
           </div>
@@ -153,7 +153,7 @@ function DeleteProject({ project }: { project: Project }) {
         <button
           type="button"
           onClick={() => setArmed(true)}
-          className="mt-3 rounded-lg border border-danger-500/30 bg-danger-500/5 px-3 py-1.5 text-xs text-danger-400 hover:bg-danger-500/10"
+          className="mt-3 rounded-lg border border-danger-500/30 bg-danger-500/5 px-3 py-1.5 text-xs text-danger-600 hover:bg-danger-500/10"
         >
           Delete project
         </button>

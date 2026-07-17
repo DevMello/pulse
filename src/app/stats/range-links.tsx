@@ -24,8 +24,8 @@ export function RangeLinks({ current }: { current: number }) {
           aria-current={current === r.days ? 'page' : undefined}
           className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
             current === r.days
-              ? 'bg-ink-850 text-ink-100'
-              : 'text-ink-600 hover:bg-ink-900 hover:text-ink-300'
+              ? 'bg-surface-sunken text-text'
+              : 'text-text-subtle hover:bg-surface hover:text-text'
           }`}
         >
           {r.label}

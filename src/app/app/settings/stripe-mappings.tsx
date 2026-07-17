@@ -29,30 +29,30 @@ export function StripeMappings({ projects, mappings }: { projects: Project[]; ma
   return (
     <div>
       {mappings.length === 0 ? (
-        <p className="border-b border-ink-850 bg-money-500/5 px-4 py-3 text-xs leading-relaxed text-money-400">
+        <p className="border-b border-border bg-warn-500/8 px-4 py-3 text-xs leading-relaxed text-warn-700">
           No routing rules yet. Stripe payments will be acknowledged and{' '}
           <strong>discarded</strong> until at least one rule exists — recording money against a
           guessed project would be worse than not recording it.
         </p>
       ) : (
-        <ul className="divide-y divide-ink-850/60">
+        <ul className="divide-y divide-border">
           {mappings.map((m) => {
             const project = projects.find((p) => p.id === m.project_id);
             return (
               <li key={m.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
                 <div className="min-w-0">
-                  <span className="text-ink-300">
+                  <span className="text-text">
                     {m.match_value ? (
                       <>
-                        <span className="text-ink-600">{m.match_type}</span>{' '}
+                        <span className="text-text-subtle">{m.match_type}</span>{' '}
                         <code className="font-mono text-xs">{m.match_value}</code>
                       </>
                     ) : (
-                      <span className="text-ink-500">everything else</span>
+                      <span className="text-text-subtle">everything else</span>
                     )}
                   </span>
-                  <span className="mx-2 text-ink-700">→</span>
-                  <span className="text-ink-100">{project?.name ?? 'unknown project'}</span>
+                  <span className="mx-2 text-text-subtle">→</span>
+                  <span className="text-text">{project?.name ?? 'unknown project'}</span>
                 </div>
                 <DeleteMapping id={m.id} />
               </li>
@@ -61,7 +61,7 @@ export function StripeMappings({ projects, mappings }: { projects: Project[]; ma
         </ul>
       )}
 
-      <form action={action} className="space-y-3 border-t border-ink-850 p-4">
+      <form action={action} className="space-y-3 border-t border-border p-4">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Match on">
             <Select
@@ -100,7 +100,7 @@ function DeleteMapping({ id }: { id: string }) {
   return (
     <form action={action}>
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className="shrink-0 text-xs text-ink-700 hover:text-danger-400">
+      <button type="submit" className="shrink-0 text-xs text-text-subtle hover:text-danger-600">
         Remove
       </button>
     </form>

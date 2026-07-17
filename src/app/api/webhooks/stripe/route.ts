@@ -94,6 +94,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       base_currency: record.base_currency,
       occurred_at: record.occurred_at,
       external_id: record.external_id,
+      recurring_interval: record.recurring?.interval ?? null,
+      recurring_interval_count: record.recurring?.interval_count ?? null,
     },
     { onConflict: 'source,external_id' }
   );

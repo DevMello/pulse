@@ -3,49 +3,233 @@
 /**
  * Pulse design tokens.
  *
- * One restrained palette shared by the dashboard and the public page, so the
- * showcase looks like the product rather than a separate site. Dark by default:
- * the public page is usually embedded in a developer's own dark portfolio, and
- * the dashboard is looked at late at night.
+ * One palette shared by the dashboard and the public page, so the showcase looks
+ * like the product rather than a separate site.
+ *
+ * Two layers, deliberately:
+ *
+ *   1. Raw ramps (ink / brand / accent / money / positive / danger / warn).
+ *      `ink-*` is an honest darkness ramp — a higher number is always darker,
+ *      on any theme.
+ *   2. Semantic roles (canvas / surface / border / text). Components use these,
+ *      never the raw ramps, for anything structural.
+ *
+ * The split is what makes the theme legible. Naming a token for its role rather
+ * than its position means `bg-surface` keeps meaning "a card" if the ramp ever
+ * flips, instead of `bg-ink-950` having to mean "white" — which would be a name
+ * that lies to whoever reads it next.
  */
 @theme {
-  --color-ink-950: oklch(0.15 0.012 260);
-  --color-ink-900: oklch(0.19 0.014 260);
-  --color-ink-850: oklch(0.23 0.015 260);
-  --color-ink-800: oklch(0.28 0.016 260);
-  --color-ink-700: oklch(0.38 0.017 260);
-  --color-ink-600: oklch(0.50 0.017 260);
-  --color-ink-500: oklch(0.62 0.016 260);
-  --color-ink-400: oklch(0.72 0.014 260);
-  --color-ink-300: oklch(0.82 0.010 260);
-  --color-ink-200: oklch(0.90 0.007 260);
-  --color-ink-100: oklch(0.95 0.005 260);
-  --color-ink-50:  oklch(0.98 0.003 260);
+  /* --- neutral ramp -------------------------------------------------------
+     Faintly cooled toward the brand hue so grays sit next to indigo without
+     looking muddy. */
+  --color-ink-50:  oklch(0.985 0.002 271);
+  --color-ink-100: oklch(0.970 0.004 271);
+  --color-ink-200: oklch(0.930 0.006 271);
+  --color-ink-300: oklch(0.880 0.008 271);
+  --color-ink-400: oklch(0.790 0.010 271);
+  --color-ink-500: oklch(0.680 0.012 271);
+  /* 0.550, not 0.560: text-subtle resolves to this, and at 0.560 it cleared AA
+     on --color-surface (4.66) but missed on the slightly darker --color-canvas
+     (4.33) — where plenty of subtitles actually sit. */
+  --color-ink-600: oklch(0.550 0.014 271);
+  --color-ink-700: oklch(0.450 0.014 271);
+  --color-ink-800: oklch(0.350 0.014 271);
+  --color-ink-900: oklch(0.255 0.012 271);
+  --color-ink-950: oklch(0.165 0.010 271);
 
-  --color-pulse-400: oklch(0.78 0.16 155);
-  --color-pulse-500: oklch(0.72 0.18 155);
-  --color-pulse-600: oklch(0.64 0.17 155);
+  /* --- brand --------------------------------------------------------------
+     brand-500 is exactly #4153EF, the reference palette's single hex. The rest
+     of the ramp is that color's hue held constant with lightness and chroma
+     walked out from it. */
+  --color-brand-50:  oklch(0.970 0.018 271);
+  --color-brand-100: oklch(0.940 0.036 271);
+  --color-brand-200: oklch(0.885 0.070 271);
+  --color-brand-300: oklch(0.800 0.120 271);
+  --color-brand-400: oklch(0.665 0.190 271);
+  --color-brand-500: oklch(0.531 0.232 271);
+  --color-brand-600: oklch(0.470 0.225 271);
+  --color-brand-700: oklch(0.400 0.195 271);
+  --color-brand-800: oklch(0.320 0.155 271);
+  --color-brand-900: oklch(0.255 0.115 271);
 
-  --color-money-400: oklch(0.80 0.15 85);
-  --color-money-500: oklch(0.74 0.16 85);
+  /* --- accent -------------------------------------------------------------
+     The magenta the reference dashboard uses for its bar charts. Purely a
+     second series color: it carries no good/bad meaning. */
+  --color-accent-300: oklch(0.800 0.130 345);
+  --color-accent-400: oklch(0.720 0.200 345);
+  --color-accent-500: oklch(0.635 0.245 345);
+  --color-accent-600: oklch(0.560 0.230 345);
 
-  --color-danger-400: oklch(0.70 0.19 25);
-  --color-danger-500: oklch(0.62 0.21 25);
+  /* --- money --------------------------------------------------------------
+     Warm cream, matching the reference's Revenue card. Means money and nothing
+     else — see warn-* below. */
+  --color-money-300: oklch(0.900 0.080 85);
+  --color-money-400: oklch(0.820 0.130 85);
+  --color-money-500: oklch(0.720 0.150 85);
+  --color-money-600: oklch(0.590 0.130 85);
+  --color-money-700: oklch(0.480 0.110 85);
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* --- warn ---------------------------------------------------------------
+     Split out of money-*, which used to mean both "money" and "caution". One
+     token with two meanings can't be re-hued: changing the revenue color would
+     silently repaint every warning banner. */
+  --color-warn-400: oklch(0.800 0.140 65);
+  --color-warn-500: oklch(0.700 0.155 65);
+  --color-warn-600: oklch(0.560 0.135 65);
+  --color-warn-700: oklch(0.470 0.115 65);
+
+  /* --- trend --------------------------------------------------------------
+     Direction only. The brand is indigo, so it cannot also mean "up" — a metric
+     rising must not be the same color as a nav item being active. */
+  --color-positive-400: oklch(0.750 0.150 155);
+  --color-positive-500: oklch(0.640 0.160 155);
+  --color-positive-600: oklch(0.530 0.140 155);
+  --color-positive-700: oklch(0.440 0.115 155);
+
+  --color-danger-400: oklch(0.700 0.190 25);
+  --color-danger-500: oklch(0.590 0.215 25);
+  --color-danger-600: oklch(0.510 0.200 25);
+  --color-danger-700: oklch(0.430 0.170 25);
+
+  /* --- semantic roles -----------------------------------------------------
+     What components actually reference. */
+  --color-canvas: oklch(0.975 0.005 271);
+  --color-surface: oklch(1 0 0);
+  --color-surface-sunken: var(--color-ink-100);
+
+  --color-border: var(--color-ink-200);
+  --color-border-strong: var(--color-ink-300);
+
+  /* The choropleth's "no traffic" land. Its own role because no existing token
+     means the right thing: border/sunken read as chrome, and land is data. */
+  --color-map-empty: var(--color-ink-200);
+
+  /* Every text token clears WCAG AA (4.5:1) against BOTH --color-surface and the
+     slightly darker --color-canvas, so none of them can be reached for by
+     mistake and fail. Canvas is the binding constraint — text-subtle passes on
+     surface at 4.86 but only clears canvas at 4.52, which is what pins ink-600.
+     Decorative grays that needn't pass (chart gridlines, dividers, placeholders)
+     use the ink-* ramp directly and are not text. */
+  --color-text: var(--color-ink-950);
+  --color-text-muted: var(--color-ink-700);
+  --color-text-subtle: var(--color-ink-600);
+
+  --font-sans: var(--font-pulse-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: var(--font-pulse-display), var(--font-pulse-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 :root {
+  color-scheme: light;
+}
+
+/**
+ * Dark theme.
+ *
+ * A pre-paint script in the root layout stamps `data-theme` on <html> — the
+ * stored choice if there is one, otherwise the OS preference — so this selector
+ * is the single source of truth and there's no duplicated media-query block to
+ * drift out of sync.
+ *
+ * Only two kinds of token flip:
+ *
+ *   1. The semantic roles (canvas / surface / border / text), which is what the
+ *      role layer exists for.
+ *   2. Ramp steps whose *use* encodes "this page is light": the pale tint end of
+ *      brand-* (selected fills, the boxed mark) and the dark text end of the
+ *      tone ramps (positive/danger/warn/money-600/700, brand-600/700 as link
+ *      text). On a dark canvas a tint must darken and a text tone must lighten,
+ *      or nav pills glow and revenue numbers vanish.
+ *
+ * The ink-* ramp is deliberately untouched: its header promises a higher number
+ * is always darker, on any theme. Dark-on-dark uses of it (code blocks on
+ * ink-950) already work; the few light-on-dark uses get scoped rules below.
+ *
+ * Every text token keeps clearing WCAG AA against both surfaces: the binding
+ * pair here is text-subtle (L 0.70) on surface (L 0.195), ~5.4:1.
+ */
+[data-theme='dark'] {
   color-scheme: dark;
+
+  --color-canvas: oklch(0.15 0.012 271);
+  --color-surface: oklch(0.195 0.012 271);
+  --color-surface-sunken: oklch(0.24 0.012 271);
+
+  --color-border: oklch(0.285 0.014 271);
+  --color-border-strong: oklch(0.365 0.016 271);
+
+  --color-text: oklch(0.93 0.005 271);
+  --color-text-muted: oklch(0.79 0.01 271);
+  --color-text-subtle: oklch(0.7 0.012 271);
+
+  /* Pale tints → dark tints. Same hue, same job: "faintly brand-washed". */
+  --color-brand-50: oklch(0.245 0.055 271);
+  --color-brand-100: oklch(0.29 0.075 271);
+  --color-brand-200: oklch(0.39 0.105 271);
+  /* Text tones → lightened. brand-600 stays dark enough that the primary
+     button's white label survives its hover state. */
+  --color-brand-600: oklch(0.6 0.21 271);
+  --color-brand-700: oklch(0.72 0.16 271);
+
+  --color-money-600: oklch(0.75 0.14 85);
+  --color-money-700: oklch(0.82 0.13 85);
+
+  --color-warn-600: oklch(0.75 0.15 65);
+  --color-warn-700: oklch(0.81 0.13 65);
+
+  --color-positive-600: oklch(0.72 0.15 155);
+  --color-positive-700: oklch(0.79 0.13 155);
+
+  --color-danger-600: oklch(0.68 0.19 25);
+  --color-danger-700: oklch(0.76 0.15 25);
+
+  --color-map-empty: var(--color-ink-800);
+}
+
+/* The two light-on-dark uses of the raw ink ramp. Placeholders drop to ink-600
+   so they stay dimmer than entered text; the thin scrollbar does the same. */
+[data-theme='dark'] ::placeholder {
+  color: var(--color-ink-600);
+}
+[data-theme='dark'] * {
+  scrollbar-color: var(--color-ink-700) transparent;
+}
+
+/* Theme-conditional visibility, for the toggle's sun/moon pair. CSS rather than
+   client state so the icons can server-render without a hydration mismatch. */
+[data-theme='dark'] [data-hide-dark],
+:root:not([data-theme='dark']) [data-hide-light] {
+  display: none;
 }
 
 html,
 body {
-  background: var(--color-ink-950);
-  color: var(--color-ink-100);
+  background: var(--color-canvas);
+  color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/**
+ * The reference's signature surface: a saturated blue gradient that the widgets
+ * sit on top of.
+ *
+ * Every stop is held dark enough that pure white clears AA against it — the
+ * lightest point here is 4.8:1. That constraint is why the sky-blue highlight is
+ * L=0.54 rather than the L=0.78 it wants to be: the first cut of this gradient
+ * put white text at 1.95:1 on that highlight, which looked fine in a screenshot
+ * and was unreadable in fact.
+ *
+ * It follows that nothing on this surface may be a *tint* of white. No color can
+ * beat white's own contrast, so anything smaller than a headline goes in a light
+ * card on top — which is what the reference does with its own widgets.
+ */
+.brand-panel {
+  background:
+    radial-gradient(120% 140% at 12% 15%, oklch(0.54 0.15 238 / 0.9) 0%, transparent 55%),
+    radial-gradient(100% 120% at 92% 88%, oklch(0.47 0.20 292 / 0.85) 0%, transparent 52%),
+    linear-gradient(107deg, oklch(0.45 0.18 252) 0%, var(--color-brand-500) 48%, oklch(0.44 0.20 288) 100%);
 }
 
 /* Tabular numerals everywhere numbers live. Proportional digits make a
@@ -70,18 +254,23 @@ body {
 
 /* Keyboard focus must stay visible; these pages are dense and easy to get lost in. */
 :focus-visible {
-  outline: 2px solid var(--color-pulse-500);
+  outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-::selection {
-  background: var(--color-pulse-600);
-  color: var(--color-ink-950);
+/* On the gradient panel the brand ring disappears into the background, so focus
+   there is drawn in white instead. */
+.brand-panel :focus-visible {
+  outline-color: oklch(1 0 0);
 }
 
-/* Subtle scrollbars, dark-appropriate. */
+::selection {
+  background: var(--color-brand-500);
+  color: oklch(1 0 0);
+}
+
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-ink-800) transparent;
+  scrollbar-color: var(--color-ink-300) transparent;
 }

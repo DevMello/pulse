@@ -11,6 +11,8 @@ import { convertMinor, type ConvertInput } from '../money';
 
 export type RevenueKind = 'one_time' | 'subscription' | 'refund' | 'dispute';
 
+export type RecurringInterval = 'day' | 'week' | 'month' | 'year';
+
 export interface NormalizedRevenue {
   kind: RevenueKind;
   /** Minor units. Negative for refunds and disputes — see below. */
@@ -20,6 +22,13 @@ export interface NormalizedRevenue {
   external_id: string;
   /** Stripe object ids used to route the money to a project. */
   match: { account?: string; product?: string; price?: string };
+  /**
+   * The billing period this payment covers, for subscriptions. This is what
+   * lets MRR amortize an annual invoice over twelve months instead of spiking
+   * the month it was billed. Null when Stripe didn't say — the SQL then
+   * assumes monthly, the conservative reading for a recurring charge.
+   */
+  recurring?: { interval: RecurringInterval; interval_count: number } | null;
 }
 
 /**
@@ -105,6 +114,7 @@ export function normalizeStripeEvent(event: Stripeish): NormalizedRevenue | null
           product: typeof price?.product === 'string' ? price.product : price?.product?.id,
           price: price?.id,
         },
+        recurring: recurring ? recurringPeriod(price) : null,
       };
     }
 
@@ -162,6 +172,29 @@ export function normalizeStripeEvent(event: Stripeish): NormalizedRevenue | null
     default:
       return null;
   }
+}
+
+/**
+ * The billing period from a price's `recurring` block, or from the legacy
+ * `plan` shape which carries interval/interval_count at the top level.
+ *
+ * Anything outside Stripe's four intervals or a sane count returns null rather
+ * than guessing — null renders as "monthly" downstream, which for a recurring
+ * charge understates rather than inflates.
+ */
+function recurringPeriod(
+  price: Record<string, any> | undefined
+): { interval: RecurringInterval; interval_count: number } | null {
+  const source = price?.recurring ?? price;
+  const interval = source?.interval;
+  if (interval !== 'day' && interval !== 'week' && interval !== 'month' && interval !== 'year') {
+    return null;
+  }
+
+  const rawCount = Number(source?.interval_count ?? 1);
+  const interval_count = Number.isInteger(rawCount) && rawCount >= 1 && rawCount <= 36 ? rawCount : 1;
+
+  return { interval, interval_count };
 }
 
 /**

@@ -26,16 +26,16 @@ track('purchase', { revenue: { amount: 29, currency: 'USD' } });`;
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-ink-850 px-4">
+      <div className="flex gap-1 border-b border-border px-4">
         {(['script', 'npm'] as const).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`-mb-px border-b-2 px-3 py-2 text-xs font-medium transition ${
+            className={`-mb-px border-b-2 px-3 py-2 text-xs font-semibold transition ${
               tab === t
-                ? 'border-pulse-500 text-ink-100'
-                : 'border-transparent text-ink-600 hover:text-ink-300'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-text-subtle hover:text-text'
             }`}
           >
             {t === 'script' ? 'Script tag' : 'NPM (optional)'}
@@ -46,15 +46,15 @@ track('purchase', { revenue: { amount: 29, currency: 'USD' } });`;
       <div className="p-4">
         {tab === 'script' ? (
           <>
-            <p className="mb-3 text-xs text-ink-500">
-              Paste before <code className="rounded bg-ink-850 px-1 py-0.5 font-mono">&lt;/body&gt;</code>. That&apos;s
+            <p className="mb-3 text-xs text-text-subtle">
+              Paste before <code className="rounded bg-surface-sunken px-1 py-0.5 font-mono">&lt;/body&gt;</code>. That&apos;s
               the whole integration — no cookies, no consent banner, ~1&nbsp;KB.
             </p>
             <CodeBlock code={scriptTag} />
           </>
         ) : (
           <>
-            <p className="mb-3 text-xs text-ink-500">
+            <p className="mb-3 text-xs text-text-subtle">
               Optional sugar for SPAs: typed helpers and automatic route tracking. The script tag
               above is already sufficient.
             </p>
@@ -80,10 +80,12 @@ export function CodeBlock({ code, multiline = false }: { code: string; multiline
     }
   }
 
+  // Deliberately dark on a light page. Code is one of the few things that reads
+  // better inverted, and every editor these people use looks like this.
   return (
     <div className="relative">
       <pre
-        className={`overflow-x-auto rounded-lg border border-ink-850 bg-ink-950 p-3 pr-20 font-mono text-xs leading-relaxed text-ink-300 ${
+        className={`overflow-x-auto rounded-lg bg-ink-950 p-3 pr-20 font-mono text-xs leading-relaxed text-ink-200 ${
           multiline ? 'whitespace-pre' : 'whitespace-pre-wrap break-all'
         }`}
       >
@@ -92,7 +94,7 @@ export function CodeBlock({ code, multiline = false }: { code: string; multiline
       <button
         type="button"
         onClick={copy}
-        className="absolute top-2 right-2 rounded-md border border-ink-800 bg-ink-850 px-2 py-1 text-xs text-ink-300 transition hover:bg-ink-800"
+        className="absolute top-2 right-2 rounded-md border border-white/15 bg-white/10 px-2 py-1 text-xs text-ink-100 transition hover:bg-white/20"
       >
         {copied ? 'Copied' : 'Copy'}
       </button>

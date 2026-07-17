@@ -19,8 +19,8 @@ export function NavLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className={`shrink-0 rounded-md px-2.5 py-1.5 text-sm transition ${
-        active ? 'bg-ink-850 text-ink-50' : 'text-ink-500 hover:bg-ink-900 hover:text-ink-200'
+      className={`shrink-0 rounded-lg px-2.5 py-1.5 text-sm font-medium transition ${
+        active ? 'bg-brand-50 text-brand-700' : 'text-text-subtle hover:bg-surface-sunken hover:text-text'
       }`}
     >
       {children}

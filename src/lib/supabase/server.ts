@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
@@ -44,7 +44,6 @@ export async function supabaseServer(): Promise<SupabaseClient> {
  * the one browser that matters most — the owner's.
  */
 export function supabasePublic(): SupabaseClient {
-  const { createClient } = require('@supabase/supabase-js') as typeof import('@supabase/supabase-js');
   return createClient(
     requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
     requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),

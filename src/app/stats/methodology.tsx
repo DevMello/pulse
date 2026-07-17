@@ -3,13 +3,14 @@
  *
  * The point of this section is that it admits things. A methodology note that
  * only lists strengths is marketing, and readers can tell. Stating where the
- * numbers are soft — NAT collisions, multi-device double counting, MRR being a
- * proxy — is what makes the rest of the page believable.
+ * numbers are soft — NAT collisions, multi-device double counting, MRR counting
+ * paid-for periods rather than live subscriptions — is what makes the rest of
+ * the page believable.
  */
 export function Methodology() {
   return (
-    <section className="mt-12 rounded-xl border border-ink-850 bg-ink-900/30 p-5">
-      <h2 className="text-sm font-medium text-ink-200">How these numbers are measured</h2>
+    <section className="mt-12 rounded-xl border border-border bg-surface p-5">
+      <h2 className="text-sm font-medium text-text">How these numbers are measured</h2>
 
       <dl className="mt-4 grid gap-4 sm:grid-cols-2">
         <Item term="No cookies, no tracking">
@@ -43,14 +44,15 @@ export function Methodology() {
           totals are approximate by a percent or two.
         </Item>
 
-        <Item term="MRR is a proxy">
-          It's the trailing 30 days of subscription payments, not a projection from subscription
-          records. An annual plan lands entirely in the month it was billed rather than being spread
-          across twelve.
+        <Item term="What “MRR” means">
+          Each subscription payment is spread evenly over the period it covers — an annual plan
+          counts as one-twelfth per month for the year it spans, not as a spike in its billing
+          month. It's computed from payments received, so a canceled plan keeps counting until its
+          paid period runs out.
         </Item>
       </dl>
 
-      <p className="mt-4 border-t border-ink-850 pt-3 text-xs leading-relaxed text-ink-600">
+      <p className="mt-4 border-t border-border pt-3 text-xs leading-relaxed text-text-subtle">
         The owner chooses which metrics appear here. Anything hidden is never sent to your browser —
         it isn't rendered invisibly or fetched and discarded. Everything shown comes from
         pre-aggregated summaries; no individual event or visitor is ever exposed.
@@ -62,8 +64,8 @@ export function Methodology() {
 function Item({ term, children }: { term: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-ink-300">{term}</dt>
-      <dd className="mt-1 text-xs leading-relaxed text-ink-600">{children}</dd>
+      <dt className="text-xs font-medium text-text">{term}</dt>
+      <dd className="mt-1 text-xs leading-relaxed text-text-subtle">{children}</dd>
     </div>
   );
 }

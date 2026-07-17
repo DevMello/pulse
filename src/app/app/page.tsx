@@ -3,9 +3,10 @@ import type { Metadata } from 'next';
 import { supabaseServer } from '@/lib/supabase/server';
 import {
   getProjects, getSeries, sumTotals, resolveRange, previousRange,
-  pctChange, fillSeries, getMrrProxy, getGoals, bounceRate,
+  pctChange, fillSeries, getMrr, getGoals, bounceRate,
 } from '@/lib/queries';
 import { Card, CardHeader, Stat, Sparkline, Delta, compact, Empty, Badge } from '@/components/ui';
+import { buttonBase, buttonStyles } from '@/components/form';
 import { RangePicker } from '@/components/range-picker';
 import { formatMoneyCompact, displayCurrency } from '@/lib/money';
 
@@ -33,7 +34,7 @@ export default async function PortfolioPage({
   const [series, prevSeries, mrr, goals] = await Promise.all([
     getSeries(db, ids, range),
     getSeries(db, ids, prev),
-    getMrrProxy(db, ids),
+    getMrr(db, ids),
     getGoals(db),
   ]);
 
@@ -56,8 +57,8 @@ export default async function PortfolioPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-ink-50">Portfolio</h1>
-          <p className="mt-0.5 text-sm text-ink-500">
+          <h1 className="text-xl font-semibold text-text">Portfolio</h1>
+          <p className="mt-0.5 text-sm text-text-subtle">
             {projects.length} project{projects.length === 1 ? '' : 's'} · {range.label}
           </p>
         </div>
@@ -66,7 +67,7 @@ export default async function PortfolioPage({
 
       {/* Headline */}
       <Card>
-        <div className="grid grid-cols-2 divide-ink-850 sm:grid-cols-4 sm:divide-x">
+        <div className="grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
           <Stat
             label="Visitors"
             value={compact(totals.visitors)}
@@ -87,11 +88,11 @@ export default async function PortfolioPage({
           <Stat
             label="MRR"
             value={formatMoneyCompact(mrr, currency)}
-            hint="trailing 30d subscriptions"
+            hint="active subs, monthly rate"
             accent="money"
           />
         </div>
-        <div className="border-t border-ink-850 px-1 pt-2 pb-1">
+        <div className="border-t border-border px-1 pt-2 pb-1">
           <Sparkline
             points={filled.map((p) => p.visitors)}
             height={72}
@@ -104,7 +105,7 @@ export default async function PortfolioPage({
       {publicGoals.length > 0 ? (
         <Card>
           <CardHeader title="Goals" subtitle="Progress toward your targets" />
-          <div className="divide-y divide-ink-850/60">
+          <div className="divide-y divide-border">
             {publicGoals.map((g) => {
               const current =
                 g.metric === 'revenue' ? totals.revenue_cents
@@ -117,15 +118,15 @@ export default async function PortfolioPage({
               return (
                 <div key={g.id} className="px-4 py-3">
                   <div className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="text-ink-300">{g.label ?? g.metric}</span>
-                    <span className="nums text-ink-500">
+                    <span className="text-text">{g.label ?? g.metric}</span>
+                    <span className="nums text-text-subtle">
                       {money ? formatMoneyCompact(current, currency) : compact(current)}
                       {' / '}
                       {money ? formatMoneyCompact(g.target, currency) : compact(g.target)}
                     </span>
                   </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-850">
-                    <div className="h-full rounded-full bg-pulse-500 transition-all" style={{ width: `${pct}%` }} />
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+                    <div className="h-full rounded-full bg-brand-500 transition-all" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -140,42 +141,44 @@ export default async function PortfolioPage({
           title="Projects"
           subtitle="Ranked by visitors this period"
           action={
-            <Link href="/app/new" className="text-xs text-pulse-400 hover:text-pulse-300">
+            <Link href="/app/new" className="text-xs font-medium text-brand-600 hover:text-brand-700">
               New project
             </Link>
           }
         />
-        <div className="divide-y divide-ink-850/60">
+        <div className="divide-y divide-border">
           {leaderboard.map(({ project, totals: t, prev: pt, series: s }) => {
             const br = bounceRate(t);
             return (
               <Link
                 key={project.id}
                 href={`/app/p/${project.slug}`}
-                className="grid grid-cols-12 items-center gap-3 px-4 py-3 transition hover:bg-ink-900"
+                className="grid grid-cols-12 items-center gap-3 px-4 py-3 transition hover:bg-surface"
               >
                 <div className="col-span-12 min-w-0 sm:col-span-3">
-                  <div className="truncate text-sm font-medium text-ink-100">{project.name}</div>
-                  <div className="truncate text-xs text-ink-600">
-                    {project.domains[0] ?? <span className="text-money-500">no domain set</span>}
+                  <div className="truncate text-sm font-medium text-text">{project.name}</div>
+                  <div className="truncate text-xs text-text-subtle">
+                    {/* A caution, not a money figure — this is why warn-* had to
+                        be split out of money-*. */}
+                    {project.domains[0] ?? <span className="text-warn-700">no domain set</span>}
                   </div>
                 </div>
 
                 <div className="col-span-4 sm:col-span-2">
-                  <div className="nums text-sm text-ink-200">{compact(t.visitors)}</div>
-                  <div className="text-xs text-ink-600">visitors</div>
+                  <div className="nums text-sm text-text">{compact(t.visitors)}</div>
+                  <div className="text-xs text-text-subtle">visitors</div>
                 </div>
 
                 <div className="col-span-4 sm:col-span-2">
-                  <div className="nums text-sm text-ink-200">{compact(t.pageviews)}</div>
-                  <div className="text-xs text-ink-600">views</div>
+                  <div className="nums text-sm text-text">{compact(t.pageviews)}</div>
+                  <div className="text-xs text-text-subtle">views</div>
                 </div>
 
                 <div className="col-span-4 sm:col-span-2">
-                  <div className="nums text-sm text-money-400">
+                  <div className="nums text-sm font-medium text-money-700">
                     {formatMoneyCompact(t.revenue_cents, currency)}
                   </div>
-                  <div className="text-xs text-ink-600">
+                  <div className="text-xs text-text-subtle">
                     {br === null ? 'revenue' : `${br.toFixed(0)}% bounce`}
                   </div>
                 </div>
@@ -203,13 +206,12 @@ function FirstRun() {
         <Empty title="No projects yet">
           <p>
             A project is one site or app. Create one and you&apos;ll get a script tag to paste before
-            <code className="mx-1 rounded bg-ink-850 px-1 py-0.5 font-mono text-xs">&lt;/body&gt;</code>.
+            <code className="mx-1 rounded bg-surface-sunken px-1 py-0.5 font-mono text-xs">&lt;/body&gt;</code>.
             That&apos;s the whole integration.
           </p>
-          <Link
-            href="/app/new"
-            className="mt-5 inline-block rounded-lg bg-pulse-500 px-4 py-2 text-sm font-semibold text-ink-950 transition hover:bg-pulse-400"
-          >
+          {/* Borrows the real button styling rather than restating it. This was
+              one of four hand-rolled copies that had already drifted. */}
+          <Link href="/app/new" className={`mt-5 inline-block ${buttonBase} ${buttonStyles.primary}`}>
             Create your first project
           </Link>
         </Empty>

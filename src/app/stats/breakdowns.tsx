@@ -46,10 +46,10 @@ export async function Breakdowns({ slug, days }: { slug: string; days: number })
   if (shown.length === 0) return null;
 
   return (
-    <div className="grid gap-px border-t border-ink-850 bg-ink-850 sm:grid-cols-3">
+    <div className="grid gap-px border-t border-border bg-surface-sunken sm:grid-cols-3">
       {shown.map((section) => (
-        <div key={section.key} className="bg-ink-900/50 p-4">
-          <h3 className="mb-2 text-xs font-medium tracking-wide text-ink-600 uppercase">
+        <div key={section.key} className="bg-surface p-4">
+          <h3 className="mb-2 text-xs font-medium tracking-wide text-text-subtle uppercase">
             {section.title}
           </h3>
           <List rows={section.rows} dimension={section.key} />
@@ -73,16 +73,16 @@ function List({ rows, dimension }: { rows: Row[]; dimension: string }) {
         <li key={row.value} className="relative">
           {scalable ? (
             <div
-              className="absolute inset-y-0 left-0 rounded-sm bg-pulse-500/10"
+              className="absolute inset-y-0 left-0 rounded-sm bg-brand-500/10"
               style={{ width: `${Math.max(((row.hits.value ?? 0) / max) * 100, 2)}%` }}
               aria-hidden="true"
             />
           ) : null}
           <div className="relative flex items-center justify-between gap-2 px-1.5 py-1">
-            <span className="min-w-0 truncate text-xs text-ink-300" title={label(row.value, dimension)}>
+            <span className="min-w-0 truncate text-xs text-text" title={label(row.value, dimension)}>
               {label(row.value, dimension)}
             </span>
-            <span className="nums shrink-0 text-xs text-ink-500">
+            <span className="nums shrink-0 text-xs text-text-subtle">
               {row.hits.display ?? (row.hits.value !== null ? compact(row.hits.value) : '·')}
             </span>
           </div>

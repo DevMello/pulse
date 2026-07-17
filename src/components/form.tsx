@@ -3,6 +3,31 @@
 import { useFormStatus } from 'react-dom';
 import type { ReactNode } from 'react';
 
+/**
+ * Form primitives.
+ *
+ * The two exported class strings below are the whole button/input design. They
+ * are exported because the styling had already been copy-pasted into five other
+ * files (the new-project form, the goals panel, the danger zone), which is how
+ * the three inputs on the new-project page ended up subtly out of step with
+ * every other input in the app. A component can't always be used — a controlled
+ * <select> needs its own element — but the string can.
+ */
+
+export const inputShell =
+  // Placeholder uses the raw ramp, not text-muted: a placeholder that passes AA
+  // is indistinguishable from a filled-in value.
+  'w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-ink-400 transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none disabled:opacity-50';
+
+export const buttonStyles = {
+  primary: 'bg-brand-500 text-white shadow-sm shadow-brand-500/25 hover:bg-brand-600',
+  ghost: 'border border-border-strong bg-surface text-text-muted hover:bg-surface-sunken hover:text-text',
+  danger: 'border border-danger-600/30 bg-danger-500/10 text-danger-700 hover:bg-danger-500/20',
+} as const;
+
+export const buttonBase =
+  'rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50';
+
 export function Field({
   label,
   hint,
@@ -16,11 +41,11 @@ export function Field({
 }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-medium text-ink-300">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-xs font-semibold text-text-muted">
         {label}
       </label>
       {children}
-      {hint ? <p className="mt-1.5 text-xs leading-relaxed text-ink-600">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs leading-relaxed text-text-subtle">{hint}</p> : null}
     </div>
   );
 }
@@ -37,18 +62,12 @@ export function SubmitButton({
   // creating two projects or two revenue rows.
   const { pending } = useFormStatus();
 
-  const styles = {
-    primary: 'bg-pulse-500 text-ink-950 hover:bg-pulse-400',
-    ghost: 'border border-ink-800 bg-ink-850 text-ink-200 hover:bg-ink-800',
-    danger: 'border border-danger-500/40 bg-danger-500/10 text-danger-400 hover:bg-danger-500/20',
-  };
-
   return (
     <button
       type="submit"
       disabled={pending}
       {...rest}
-      className={`rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${rest.className ?? ''}`}
+      className={`${buttonBase} ${buttonStyles[variant]} ${rest.className ?? ''}`}
     >
       {pending ? 'Saving…' : children}
     </button>
@@ -58,7 +77,7 @@ export function SubmitButton({
 export function ErrorNote({ error }: { error?: string }) {
   if (!error) return null;
   return (
-    <p role="alert" className="rounded-lg border border-danger-500/30 bg-danger-500/5 px-3 py-2 text-xs text-danger-400">
+    <p role="alert" className="rounded-lg border border-danger-600/25 bg-danger-500/8 px-3 py-2 text-xs text-danger-700">
       {error}
     </p>
   );
@@ -67,7 +86,7 @@ export function ErrorNote({ error }: { error?: string }) {
 export function OkNote({ show, children }: { show?: boolean; children?: ReactNode }) {
   if (!show) return null;
   return (
-    <p role="status" className="rounded-lg border border-pulse-600/30 bg-pulse-600/5 px-3 py-2 text-xs text-pulse-400">
+    <p role="status" className="rounded-lg border border-positive-600/25 bg-positive-500/8 px-3 py-2 text-xs text-positive-700">
       {children ?? 'Saved.'}
     </p>
   );
@@ -93,11 +112,11 @@ export function Toggle({
         name={name}
         defaultChecked={defaultChecked}
         disabled={disabled}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink-700 bg-ink-900 text-pulse-500 focus:ring-pulse-500"
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-strong bg-surface text-brand-500 focus:ring-brand-500"
       />
       <span className="min-w-0">
-        <span className="block text-sm text-ink-200">{label}</span>
-        {hint ? <span className="mt-0.5 block text-xs text-ink-600">{hint}</span> : null}
+        <span className="block text-sm text-text">{label}</span>
+        {hint ? <span className="mt-0.5 block text-xs text-text-subtle">{hint}</span> : null}
       </span>
     </label>
   );
@@ -113,11 +132,7 @@ export function Select({
   options: Array<{ value: string; label: string }>;
 }) {
   return (
-    <select
-      name={name}
-      defaultValue={defaultValue}
-      className="w-full rounded-lg border border-ink-800 bg-ink-900 px-3 py-2 text-sm text-ink-100 focus:border-pulse-600 focus:outline-none"
-    >
+    <select name={name} defaultValue={defaultValue} className={inputShell}>
       {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
@@ -128,19 +143,9 @@ export function Select({
 }
 
 export function TextInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className={`w-full rounded-lg border border-ink-800 bg-ink-900 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-700 focus:border-pulse-600 focus:outline-none ${props.className ?? ''}`}
-    />
-  );
+  return <input {...props} className={`${inputShell} ${props.className ?? ''}`} />;
 }
 
 export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      {...props}
-      className={`w-full rounded-lg border border-ink-800 bg-ink-900 px-3 py-2 font-mono text-xs text-ink-100 placeholder:text-ink-700 focus:border-pulse-600 focus:outline-none ${props.className ?? ''}`}
-    />
-  );
+  return <textarea {...props} className={`${inputShell} font-mono text-xs ${props.className ?? ''}`} />;
 }

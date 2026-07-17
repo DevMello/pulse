@@ -4,30 +4,35 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { compact } from '@/components/ui';
 
 /**
- * A simple funnel: step A → B → C with drop-off between them.
+ * A per-visitor funnel: step A → B → C with drop-off between them.
  *
- * An honest caveat, stated in the UI rather than buried here: these are event
- * *counts* from the rollups, not per-visitor paths. So "40% reached step 2"
- * means step 2 fired 40% as often as step 1 — not that 40% of the specific
- * people who did step 1 went on to do step 2.
+ * The numbers are people, not fires: pulse_owner_funnel walks raw events one
+ * visitor_hash at a time, so "40% reached step 2" means 40% of the visitors
+ * who did step 1 went on to do step 2 — after step 1, in order. An event that
+ * fires twice for one person counts once.
  *
- * A true per-visitor funnel means sequencing raw events per visitor_hash, which
- * only works inside the retention window and costs a firehose scan per view.
- * For the "visits → signups → purchases" question this product is actually for,
- * the ratio is the answer, and it stays correct after raw events are pruned.
- * Overstating what it measures would be the kind of vanity metric Section 2
- * rules out.
+ * The two limits that sequencing raw events inherits, both stated in the UI:
+ * only events inside the retention window still exist to be walked, and the
+ * visitor hash rotates at UTC midnight (the privacy design), so a conversion
+ * spanning two days counts as a drop-off rather than being linked.
  */
 export function Funnel({
   available,
   selected,
-  counts,
+  stepVisitors,
   visitors,
+  beyondRetention,
+  retentionDays,
 }: {
   available: string[];
   selected: string[];
-  counts: Record<string, number>;
+  /** Visitors who completed each selected step in order, keyed by step name. */
+  stepVisitors: Record<string, number>;
+  /** Distinct visitors over the range — the implicit first step. */
   visitors: number;
+  /** True when the selected range reaches past the raw-event retention window. */
+  beyondRetention: boolean;
+  retentionDays: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,21 +47,21 @@ export function Funnel({
 
   if (available.length === 0) {
     return (
-      <p className="px-4 py-8 text-center text-sm text-ink-600">
+      <p className="px-4 py-8 text-center text-sm text-text-subtle">
         Track a couple of custom events and you can build a funnel here.
       </p>
     );
   }
 
-  const steps = selected.filter((s) => s in counts);
+  const steps = selected.filter((s) => available.includes(s));
   // "Visitors" as an implicit first step is what makes the funnel answer the
   // question people actually have: what fraction of traffic converts?
-  const rows = [{ label: 'Visitors', value: visitors, implicit: true }, ...steps.map((s) => ({ label: s, value: counts[s] ?? 0, implicit: false }))];
+  const rows = [{ label: 'Visitors', value: visitors, implicit: true }, ...steps.map((s) => ({ label: s, value: stepVisitors[s] ?? 0, implicit: false }))];
   const top = rows[0]?.value || 1;
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1.5 border-b border-ink-850 px-4 py-3">
+      <div className="flex flex-wrap gap-1.5 border-b border-border px-4 py-3">
         {available.map((name) => {
           const active = steps.includes(name);
           return (
@@ -66,8 +71,8 @@ export function Funnel({
               onClick={() => setSteps(active ? steps.filter((s) => s !== name) : [...steps, name])}
               className={`rounded-md border px-2 py-1 text-xs transition ${
                 active
-                  ? 'border-pulse-600/50 bg-pulse-600/15 text-pulse-400'
-                  : 'border-ink-800 bg-ink-850 text-ink-500 hover:text-ink-200'
+                  ? 'border-brand-500/40 bg-brand-500/10 text-brand-700'
+                  : 'border-border-strong bg-surface-sunken text-text-subtle hover:text-text'
               }`}
             >
               {active ? `${steps.indexOf(name) + 1}. ` : '+ '}
@@ -76,14 +81,14 @@ export function Funnel({
           );
         })}
         {steps.length > 0 ? (
-          <button type="button" onClick={() => setSteps([])} className="ml-auto text-xs text-ink-600 hover:text-ink-300">
+          <button type="button" onClick={() => setSteps([])} className="ml-auto text-xs text-text-subtle hover:text-text">
             Clear
           </button>
         ) : null}
       </div>
 
       {steps.length === 0 ? (
-        <p className="px-4 py-8 text-center text-sm text-ink-600">
+        <p className="px-4 py-8 text-center text-sm text-text-subtle">
           Click events above, in order, to build a funnel.
         </p>
       ) : (
@@ -97,19 +102,19 @@ export function Funnel({
               return (
                 <div key={row.label}>
                   <div className="mb-1 flex items-baseline justify-between gap-2 text-xs">
-                    <span className={row.implicit ? 'text-ink-500' : 'text-ink-300'}>{row.label}</span>
-                    <span className="nums text-ink-400">
+                    <span className={row.implicit ? 'text-text-subtle' : 'text-text'}>{row.label}</span>
+                    <span className="nums text-text-muted">
                       {compact(row.value)}
                       {conversion !== null ? (
-                        <span className={`ml-2 ${conversion < 10 ? 'text-danger-400' : 'text-pulse-400'}`}>
+                        <span className={`ml-2 ${conversion < 10 ? 'text-danger-600' : 'text-positive-600'}`}>
                           {conversion.toFixed(1)}%
                         </span>
                       ) : null}
                     </span>
                   </div>
-                  <div className="h-6 overflow-hidden rounded bg-ink-850">
+                  <div className="h-6 overflow-hidden rounded bg-surface-sunken">
                     <div
-                      className={`h-full rounded transition-all ${row.implicit ? 'bg-ink-700' : 'bg-pulse-500/70'}`}
+                      className={`h-full rounded transition-all ${row.implicit ? 'bg-ink-300' : 'bg-brand-500/70'}`}
                       style={{ width: `${width}%` }}
                     />
                   </div>
@@ -118,9 +123,13 @@ export function Funnel({
             })}
           </div>
 
-          <p className="border-t border-ink-850 px-4 py-2.5 text-xs leading-relaxed text-ink-600">
-            Ratios compare event counts between steps, not the paths of individual visitors — Pulse
-            stores no per-person history to follow.
+          <p className="border-t border-border px-4 py-2.5 text-xs leading-relaxed text-text-subtle">
+            Counts visitors who completed the steps in order, each person once. Visitor identity
+            resets at UTC midnight by design, so a conversion spread across two days shows as a
+            drop-off.
+            {beyondRetention
+              ? ` This range reaches past the ${retentionDays}-day raw-event retention window; pruned events can't be counted.`
+              : null}
           </p>
         </>
       )}

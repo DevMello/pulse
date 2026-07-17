@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 import { getProjectBySlug } from '@/lib/queries';
 import { NavLink } from '@/components/nav-link';
+import { Badge } from '@/components/ui';
 
 export default async function ProjectLayout({
   children,
@@ -24,17 +25,18 @@ export default async function ProjectLayout({
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-semibold text-ink-50">{project.name}</h1>
-          <p className="truncate text-sm text-ink-600">
+          <h1 className="truncate font-display text-2xl font-bold text-text">{project.name}</h1>
+          <p className="truncate text-sm text-text-subtle">
             {project.domains.length > 0 ? project.domains.join(', ') : 'No domain restriction'}
-            {project.archived ? ' · archived' : ''}
           </p>
         </div>
+        {project.archived ? <Badge tone="warn">Archived</Badge> : null}
       </div>
 
-      <nav className="flex gap-1 overflow-x-auto border-b border-ink-850 pb-px" aria-label="Project sections">
+      {/* Traffic used to sit between Overview and Events. Its breakdowns are the
+          overview's panels now, so the tab is gone and the URL redirects. */}
+      <nav className="flex gap-1 overflow-x-auto border-b border-border pb-px" aria-label="Project sections">
         <NavLink href={base} exact>Overview</NavLink>
-        <NavLink href={`${base}/traffic`}>Traffic</NavLink>
         <NavLink href={`${base}/events`}>Events</NavLink>
         <NavLink href={`${base}/revenue`}>Revenue</NavLink>
         <NavLink href={`${base}/realtime`}>Realtime</NavLink>

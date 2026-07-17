@@ -7,8 +7,8 @@ export const metadata: Metadata = { title: 'New project' };
 export default function NewProjectPage() {
   return (
     <div className="mx-auto max-w-lg py-8">
-      <h1 className="mb-1 text-xl font-semibold text-ink-50">New project</h1>
-      <p className="mb-6 text-sm text-ink-500">
+      <h1 className="mb-1 text-xl font-semibold text-text">New project</h1>
+      <p className="mb-6 text-sm text-text-subtle">
         One project per site or app. You&apos;ll get the snippet on the next screen.
       </p>
 

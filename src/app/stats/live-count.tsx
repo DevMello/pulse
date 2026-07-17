@@ -42,12 +42,12 @@ export function LiveCount({ slug }: { slug?: string }) {
   if (count === null || count === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-pulse-600/30 bg-pulse-600/10 px-3 py-1.5">
+    <div className="flex items-center gap-2 rounded-full border border-positive-600/25 bg-positive-500/10 px-3 py-1.5">
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-pulse-500 opacity-60" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-pulse-500" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-positive-500 opacity-60" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-positive-500" />
       </span>
-      <span className="nums text-xs font-medium text-pulse-400">
+      <span className="nums text-xs font-semibold text-positive-700">
         {count} online now
       </span>
     </div>

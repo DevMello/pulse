@@ -238,6 +238,49 @@ export async function getBreakdown(
   }));
 }
 
+export interface FunnelResult {
+  /** Distinct visitors over the range — the funnel's implicit top step. */
+  visitors: number;
+  /** Visitors who completed the steps in order, aligned with the input array. */
+  steps: number[];
+}
+
+/**
+ * Per-person funnel: how many visitors completed the steps *in order*.
+ *
+ * This is the one dashboard read that goes to raw `events` instead of rollups,
+ * because sequencing needs per-visitor order and rollups deliberately store
+ * none. Two limits follow and are surfaced in the UI rather than hidden:
+ * events outside the retention window no longer exist to be walked, and
+ * visitor identity resets at UTC midnight, so a conversion spanning two days
+ * counts as a drop-off. Within those limits the counts are people, not fires.
+ */
+export async function getFunnel(
+  db: SupabaseClient,
+  projectIds: string[],
+  steps: string[],
+  range: DateRange
+): Promise<FunnelResult> {
+  if (projectIds.length === 0 || steps.length === 0) return { visitors: 0, steps: [] };
+
+  const { data, error } = await db.rpc('pulse_owner_funnel', {
+    p_project_ids: projectIds,
+    p_steps: steps,
+    p_from: range.from.toISOString(),
+    p_to: range.to.toISOString(),
+  });
+
+  if (error) throw new Error(`Failed to load funnel: ${error.message}`);
+
+  const byStep = new Map<number, number>(
+    (data ?? []).map((row: { step: number; visitors: number }) => [Number(row.step), Number(row.visitors)])
+  );
+  return {
+    visitors: byStep.get(0) ?? 0,
+    steps: steps.map((_, i) => byStep.get(i + 1) ?? 0),
+  };
+}
+
 export interface RevenueRecord {
   id: string;
   project_id: string;
@@ -274,16 +317,20 @@ export async function getRevenueRecords(
 }
 
 /**
- * MRR: the sum of the last 30 days' subscription revenue.
+ * MRR: the monthly run rate of currently-paid-for subscriptions.
  *
- * A real MRR needs the subscription objects — interval, quantity, active status.
- * Pulse only stores payments, so this is a trailing-30-day proxy and is labeled
- * as such in the UI. Annual plans land entirely in the month they're billed
- * rather than being amortized, which overstates that month and understates the
- * next eleven. Calling it "MRR" without that caveat would be exactly the vanity
- * inflation Section 2 rules out.
+ * Each subscription payment carries the billing interval it covers, and the SQL
+ * normalizes: a $120 annual payment contributes $10 for each of the twelve
+ * months it spans and drops out when the paid year ends, instead of landing as
+ * one spike in its billing month. Rows without an interval (manual entries,
+ * pre-migration data) are treated as monthly, which reproduces the old
+ * trailing-30-day behavior for exactly those rows.
+ *
+ * Still computed from payments rather than subscription objects, so a canceled
+ * plan keeps counting until its paid period lapses — the remaining
+ * approximation, and it errs toward money actually received.
  */
-export async function getMrrProxy(db: SupabaseClient, projectIds: string[]): Promise<number> {
+export async function getMrr(db: SupabaseClient, projectIds: string[]): Promise<number> {
   if (projectIds.length === 0) return 0;
 
   // Summed in SQL: fetching the rows and adding them up here would truncate at

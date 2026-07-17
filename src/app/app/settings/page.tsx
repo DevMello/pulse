@@ -27,7 +27,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-semibold text-ink-50">Settings</h1>
+      <h1 className="text-xl font-semibold text-text">Settings</h1>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
             />
             <div className="space-y-3 p-4">
               {!stripeReady ? (
-                <div className="space-y-2 text-xs leading-relaxed text-ink-500">
+                <div className="space-y-2 text-xs leading-relaxed text-text-subtle">
                   <p>Set two environment variables in your Vercel project, then redeploy:</p>
                   <CodeBlock code={'STRIPE_SECRET_KEY=sk_live_…\nSTRIPE_WEBHOOK_SECRET=whsec_…'} multiline />
                   <p>
@@ -55,8 +55,8 @@ export default async function SettingsPage() {
               ) : null}
 
               <div>
-                <p className="mb-2 text-xs font-medium text-ink-300">Webhook endpoint</p>
-                <p className="mb-2 text-xs text-ink-600">
+                <p className="mb-2 text-xs font-medium text-text">Webhook endpoint</p>
+                <p className="mb-2 text-xs text-text-subtle">
                   Add this in the Stripe dashboard, subscribing to{' '}
                   <code className="font-mono">payment_intent.succeeded</code>,{' '}
                   <code className="font-mono">invoice.paid</code>,{' '}

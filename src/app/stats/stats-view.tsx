@@ -70,11 +70,11 @@ export async function StatsView({ days }: { days: number }) {
       <header className="mb-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-ink-50 sm:text-3xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-text sm:text-3xl">
               {overview.title ?? 'Open Metrics'}
             </h1>
             {overview.bio ? (
-              <p className="mt-2 max-w-xl text-sm leading-relaxed whitespace-pre-line text-ink-400">
+              <p className="mt-2 max-w-xl text-sm leading-relaxed whitespace-pre-line text-text-muted">
                 {overview.bio}
               </p>
             ) : null}
@@ -89,7 +89,7 @@ export async function StatsView({ days }: { days: number }) {
         <>
           <RangeLinks current={days} />
 
-          <section className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-ink-850 bg-ink-850 sm:grid-cols-3">
+          <section className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-surface-sunken sm:grid-cols-3">
             <Tile
               label="Visitors"
               value={allRelative ? '—' : formatCount(overview.totals.visitors)}
@@ -119,14 +119,14 @@ export async function StatsView({ days }: { days: number }) {
                   key={i}
                   className={`rounded-full border px-3 py-1 text-xs ${
                     m.achieved_at
-                      ? 'border-pulse-600/40 bg-pulse-600/10 text-pulse-400'
-                      : 'border-ink-800 bg-ink-900 text-ink-500'
+                      ? 'border-positive-600/30 bg-positive-500/10 text-positive-700'
+                      : 'border-border-strong bg-surface text-text-subtle'
                   }`}
                 >
                   {m.achieved_at ? '🎉 ' : '◦ '}
                   {m.label}
                   {m.achieved_at ? (
-                    <span className="ml-1.5 text-ink-600">
+                    <span className="ml-1.5 text-text-subtle">
                       {new Date(m.achieved_at).toLocaleDateString('en', { month: 'short', year: 'numeric' })}
                     </span>
                   ) : null}
@@ -145,10 +145,10 @@ export async function StatsView({ days }: { days: number }) {
 
       <Methodology />
 
-      <footer className="mt-10 border-t border-ink-850 pt-6 text-center">
-        <p className="text-xs text-ink-700">
+      <footer className="mt-10 border-t border-border pt-6 text-center">
+        <p className="text-xs text-text-subtle">
           Measured with{' '}
-          <Link href="https://github.com/DevMello/pulse" className="text-ink-500 hover:text-ink-300">
+          <Link href="https://github.com/DevMello/pulse" className="text-text-subtle hover:text-text">
             Pulse
           </Link>
           {' · '}
@@ -207,9 +207,9 @@ function ProjectCard({
   const points = zeroFill(project.series, days);
 
   return (
-    <article className="overflow-hidden rounded-xl border border-ink-850 bg-ink-900/50">
+    <article className="overflow-hidden rounded-xl border border-border bg-surface">
       <div className="flex flex-wrap items-start justify-between gap-4 px-4 pt-4">
-        <h2 className="text-base font-medium text-ink-100">{project.name}</h2>
+        <h2 className="text-base font-medium text-text">{project.name}</h2>
         <div className="flex flex-wrap items-baseline gap-5">
           {project.visitors ? (
             <Metric label="visitors" masked={project.visitors} trend={project.trend.visitors} relative={relative} />
@@ -219,10 +219,10 @@ function ProjectCard({
           ) : null}
           {project.revenue_cents !== undefined ? (
             <div className="text-right">
-              <div className="nums text-lg font-semibold text-money-400">
+              <div className="nums text-lg font-semibold text-money-700">
                 {formatMoneyCompact(project.revenue_cents, currency)}
               </div>
-              <div className="text-xs text-ink-600">revenue</div>
+              <div className="text-xs text-text-subtle">revenue</div>
             </div>
           ) : null}
         </div>
@@ -266,11 +266,13 @@ function Metric({
 
   return (
     <div className="text-right">
-      <div className="nums text-lg font-semibold text-ink-50">{text}</div>
-      <div className="text-xs text-ink-600">
+      <div className="nums text-lg font-semibold text-text">{text}</div>
+      <div className="text-xs text-text-subtle">
         {label}
+        {/* This used the 500 step while ui.tsx's Delta used 400 for the same
+            "up is good" signal. Both are positive-600 now. */}
         {!relative && trend !== null && Math.abs(trend) >= 0.05 ? (
-          <span className={trend > 0 ? ' text-pulse-500' : ' text-danger-400'}>
+          <span className={trend > 0 ? ' text-positive-600' : ' text-danger-600'}>
             {' '}
             {trend > 0 ? '↑' : '↓'}
             {Math.abs(trend).toFixed(0)}%
@@ -283,21 +285,21 @@ function Metric({
 
 function Tile({ label, value, sub, accent }: { label: string; value: string; sub: string; accent?: boolean }) {
   return (
-    <div className="bg-ink-950 px-4 py-5">
-      <div className="text-xs font-medium tracking-wide text-ink-600 uppercase">{label}</div>
-      <div className={`nums mt-1 text-2xl font-semibold sm:text-3xl ${accent ? 'text-money-400' : 'text-ink-50'}`}>
+    <div className="bg-canvas px-4 py-5">
+      <div className="text-xs font-medium tracking-wide text-text-subtle uppercase">{label}</div>
+      <div className={`nums mt-1 font-display text-2xl font-bold sm:text-3xl ${accent ? 'text-money-700' : 'text-text'}`}>
         {value}
       </div>
-      <div className="mt-0.5 text-xs text-ink-700">{sub}</div>
+      <div className="mt-0.5 text-xs text-text-subtle">{sub}</div>
     </div>
   );
 }
 
 function NothingPublished() {
   return (
-    <div className="rounded-xl border border-dashed border-ink-800 px-6 py-16 text-center">
-      <p className="text-sm text-ink-400">Nothing is published yet.</p>
-      <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-ink-600">
+    <div className="rounded-xl border border-dashed border-border-strong px-6 py-16 text-center">
+      <p className="text-sm text-text-muted">Nothing is published yet.</p>
+      <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-text-subtle">
         Projects are private by default. The owner can publish one, and choose exactly which metrics
         appear, from the dashboard.
       </p>
@@ -308,11 +310,11 @@ function NothingPublished() {
 function Unavailable({ message }: { message: string }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-md items-center px-4">
-      <div className="w-full rounded-xl border border-ink-850 p-6 text-center">
-        <p className="text-sm text-ink-300">Stats are unavailable right now.</p>
+      <div className="w-full rounded-xl border border-border p-6 text-center">
+        <p className="text-sm text-text">Stats are unavailable right now.</p>
         {/* Safe to surface: this path only ever reads published aggregates, so
             an error here cannot describe private data. */}
-        <p className="mt-2 font-mono text-xs break-words text-ink-700">{message}</p>
+        <p className="mt-2 font-mono text-xs break-words text-text-subtle">{message}</p>
       </div>
     </main>
   );

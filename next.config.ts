@@ -33,6 +33,14 @@ const nextConfig: NextConfig = {
       { source: '/script.js', destination: '/px.js' },
     ];
   },
+  async redirects() {
+    return [
+      // Traffic was a second page holding the same ten breakdowns the overview's
+      // panels now show. It's gone rather than duplicated, but people have it
+      // bookmarked and linked from their own notes.
+      { source: '/app/p/:slug/traffic', destination: '/app/p/:slug', permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

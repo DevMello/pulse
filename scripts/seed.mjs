@@ -249,6 +249,19 @@ for (let d = days - 1; d >= 0; d--) {
       amount_cents: 1900, currency: 'USD', amount_base_cents: 1900, base_currency: 'USD',
       occurred_at: new Date(dayStart - between(0, 20) * 3_600_000).toISOString(),
       external_id: `in_seed_${d}_${i}`,
+      recurring_interval: 'month', recurring_interval_count: 1,
+    });
+  }
+
+  // The occasional annual plan, so the demo shows amortized MRR: $190 billed
+  // once, contributing ~$15.83/mo for a year instead of spiking one month.
+  if (rand() < 0.04) {
+    revenue.push({
+      project_id: saas.id, source: 'stripe', kind: 'subscription',
+      amount_cents: 19000, currency: 'USD', amount_base_cents: 19000, base_currency: 'USD',
+      occurred_at: new Date(dayStart - between(0, 20) * 3_600_000).toISOString(),
+      external_id: `in_seed_annual_${d}`,
+      recurring_interval: 'year', recurring_interval_count: 1,
     });
   }
 

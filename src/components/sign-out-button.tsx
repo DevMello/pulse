@@ -16,7 +16,7 @@ export function SignOutButton() {
         router.push('/login');
         router.refresh();
       }}
-      className="text-xs text-ink-500 transition hover:text-ink-300"
+      className="text-xs text-text-subtle transition hover:text-text"
     >
       Sign out
     </button>

@@ -28,6 +28,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
   const value = String(online);
 
+  // The one place in Pulse that can't use a design token. This SVG is served as
+  // a standalone image — it never sits in a page whose :root carries the theme,
+  // so var(--color-brand-500) would resolve to nothing and the badge would come
+  // out unpainted. The hex below is brand-500, oklch(0.531 0.232 271), converted
+  // by hand. If the brand hue moves, this moves with it or it silently drifts —
+  // which is exactly what happened to the green it replaced: that was stock
+  // Tailwind green-500 and never matched Pulse at all.
+  const BRAND = '#4153ef';
+  const SLATE = '#24292f';
+
   // Rough advance width for the 11px sans stack. Measuring properly would need
   // font metrics we don't have at the edge; over-estimating slightly is safe
   // because the text is centered and the badge just looks a touch roomy.
@@ -45,8 +55,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   </linearGradient>
   <clipPath id="r"><rect width="${total}" height="20" rx="3" fill="#fff"/></clipPath>
   <g clip-path="url(#r)">
-    <rect width="${labelWidth}" height="20" fill="#24292f"/>
-    <rect x="${labelWidth}" width="${valueWidth}" height="20" fill="#22c55e"/>
+    <rect width="${labelWidth}" height="20" fill="${SLATE}"/>
+    <rect x="${labelWidth}" width="${valueWidth}" height="20" fill="${BRAND}"/>
     <rect width="${total}" height="20" fill="url(#s)"/>
   </g>
   <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">

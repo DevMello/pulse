@@ -96,6 +96,60 @@ describe('invoice.paid', () => {
     );
     expect(r).toMatchObject({ amount_cents: 1000, currency: 'JPY' });
   });
+
+  it('captures the billing interval so MRR can amortize', () => {
+    // An annual invoice must carry its period, or $120 billed in January would
+    // read as $120 of MRR in January and $0 for the next eleven months.
+    const r = normalizeStripeEvent(
+      event('invoice.paid', {
+        id: 'in_6', amount_paid: 12000, currency: 'usd', subscription: 'sub_3',
+        lines: { data: [{ price: { id: 'p', product: 'pr', recurring: { interval: 'year', interval_count: 1 } } }] },
+      })
+    );
+    expect(r?.recurring).toEqual({ interval: 'year', interval_count: 1 });
+  });
+
+  it('reads the interval from the legacy plan shape', () => {
+    // Old API versions send `plan` with interval at the top level, not under
+    // `recurring`.
+    const r = normalizeStripeEvent(
+      event('invoice.paid', {
+        id: 'in_7', amount_paid: 900, currency: 'usd',
+        lines: { data: [{ plan: { id: 'plan_1', product: 'pr', interval: 'month', interval_count: 3 } }] },
+      })
+    );
+    expect(r?.kind).toBe('subscription');
+    expect(r?.recurring).toEqual({ interval: 'month', interval_count: 3 });
+  });
+
+  it('leaves the interval null when Stripe does not state one', () => {
+    // Null falls back to monthly in SQL — the conservative reading.
+    const r = normalizeStripeEvent(
+      event('invoice.paid', { id: 'in_8', amount_paid: 1900, currency: 'usd', subscription: 'sub_4' })
+    );
+    expect(r?.kind).toBe('subscription');
+    expect(r?.recurring).toBeNull();
+  });
+
+  it('discards a nonsense interval_count rather than trusting it', () => {
+    const r = normalizeStripeEvent(
+      event('invoice.paid', {
+        id: 'in_9', amount_paid: 1900, currency: 'usd', subscription: 'sub_5',
+        lines: { data: [{ price: { id: 'p', recurring: { interval: 'month', interval_count: -2 } }, }] },
+      })
+    );
+    expect(r?.recurring).toEqual({ interval: 'month', interval_count: 1 });
+  });
+
+  it('marks a one-off invoice as not recurring', () => {
+    const r = normalizeStripeEvent(
+      event('invoice.paid', {
+        id: 'in_10', amount_paid: 5000, currency: 'usd',
+        lines: { data: [{ price: { id: 'price_2', product: 'prod_2' } }] },
+      })
+    );
+    expect(r?.recurring).toBeNull();
+  });
 });
 
 describe('refunds', () => {

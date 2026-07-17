@@ -11,7 +11,7 @@ export function DeleteRevenueButton({ id }: { id: string }) {
       <input type="hidden" name="id" value={id} />
       <button
         type="submit"
-        className="text-xs text-ink-700 transition hover:text-danger-400"
+        className="text-xs text-text-subtle transition hover:text-danger-600"
         title={state.error ?? 'Delete this entry'}
       >
         Delete
