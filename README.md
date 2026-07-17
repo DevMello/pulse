@@ -70,7 +70,9 @@ This creates the schema, the RLS policies, the rollup functions, and three `pg_c
 
 ### 3. Claim your instance
 
-Visit `/app` and sign in. **The first account to sign in becomes the owner; every later signup is refused.** To be explicit about who's allowed, set the allow-list on the database:
+Sign-in is email + password — no email round trip — so turn off **Confirm email** in the Supabase dashboard (Authentication → Providers → Email) first; otherwise the one-time account creation waits on a confirmation link.
+
+Then visit `/app`, choose **First run? Create the owner account**, and set your email and password. **The first account to sign up becomes the owner; every later signup is refused.** To be explicit about who's allowed, set the allow-list on the database:
 
 ```sql
 alter database postgres set pulse.owner_emails = 'you@example.com';
