@@ -136,7 +136,7 @@ export async function StatsView({ days }: { days: number }) {
 
           <section className="mt-6 space-y-4">
             {overview.projects.map((p) => (
-              <ProjectCard key={p.slug} project={p} currency={currency} />
+              <ProjectCard key={p.slug} project={p} currency={currency} days={days} />
             ))}
           </section>
         </>
@@ -169,9 +169,41 @@ export async function StatsView({ days }: { days: number }) {
   );
 }
 
-function ProjectCard({ project, currency }: { project: PublicProject; currency: string }) {
+/**
+ * Zero-fills the series across the whole range.
+ *
+ * The RPC only returns days that have a rollup row, so quiet days are absent
+ * rather than zero. Plotting that directly would compress the x-axis and draw a
+ * smooth line between two points a month apart — a chart that flatters the data
+ * by hiding the gaps. Days with no traffic are real information and should read
+ * as zero.
+ */
+function zeroFill(series: PublicProject['series'], days: number): number[] {
+  const byDate = new Map(series.map((s) => [s.date, s.visitors ?? s.pageviews ?? 0]));
+
+  const out: number[] = [];
+  const cursor = new Date();
+  cursor.setUTCHours(0, 0, 0, 0);
+  cursor.setUTCDate(cursor.getUTCDate() - (days - 1));
+
+  for (let i = 0; i < days; i++) {
+    out.push(byDate.get(cursor.toISOString().slice(0, 10)) ?? 0);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return out;
+}
+
+function ProjectCard({
+  project,
+  currency,
+  days,
+}: {
+  project: PublicProject;
+  currency: string;
+  days: number;
+}) {
   const relative = project.number_style === 'relative';
-  const points = project.series.map((s) => s.visitors ?? s.pageviews ?? 0);
+  const points = zeroFill(project.series, days);
 
   return (
     <article className="overflow-hidden rounded-xl border border-ink-850 bg-ink-900/50">

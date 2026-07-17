@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      # Enforces the ~1 KB target / 2 KB ceiling. The build script exits
+      # non-zero past the ceiling, so growing the tracker has to be a deliberate
+      # decision rather than something that slips through review.
+      - name: Tracker size budget
+        run: npm run build:tracker
+
+      - name: Build
+        env:
+          # The build prerenders /stats, which needs a reachable Supabase. These
+          # placeholders let it compile; the page renders its error state, which
+          # is a legitimate outcome to prove doesn't crash the build.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+        run: npm run build
+
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+        working-directory: packages/sdk
+      - run: npm run build
+        working-directory: packages/sdk
