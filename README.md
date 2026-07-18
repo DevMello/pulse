@@ -86,6 +86,18 @@ Create a project, copy the snippet, paste it before `</body>`. Your first pagevi
 
 ---
 
+## Or let your AI do the integration
+
+This repo ships an [Agent Skill](skills/add-pulse-analytics/) — a plain-Markdown playbook that teaches AI coding tools (Claude Code, Cursor, Codex, anything that reads the open [Agent Skills](https://agentskills.io) format) how to wire Pulse into an existing project: script tag or `@pulse/sdk`, the right adapter for React / Next.js / Vue / SvelteKit, verification, and event/revenue instrumentation.
+
+```sh
+npx skills add DevMello/pulse --skill add-pulse-analytics
+```
+
+Then, in your project: *"Add Pulse analytics — my instance is at https://pulse.example.com, key pk_…"*. See [skills/add-pulse-analytics/README.md](skills/add-pulse-analytics/README.md) for per-tool install paths.
+
+---
+
 ## Try it before pointing it at a real site
 
 ```sh
