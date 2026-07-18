@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 import { displayCurrency, parseFxRates, convertMinor, toMinorUnits } from '@/lib/money';
+import { parseDomains, slugify, uniqueSlug } from '@/lib/projects';
+import { revokeAuthorization } from '@/lib/mcp/oauth';
 
 /**
  * Server actions for the dashboard.
@@ -332,6 +334,65 @@ export async function deleteRevenueMapping(_prev: ActionState, formData: FormDat
 }
 
 // ---------------------------------------------------------------------------
+// Connected apps (MCP)
+// ---------------------------------------------------------------------------
+
+/**
+ * Turn the MCP server on or off for this instance.
+ *
+ * Off is a pause, not a purge: existing grants keep their rows, so switching
+ * back on restores the apps that were already approved rather than making the
+ * owner re-authorize each one. What it does do is immediate — discovery starts
+ * 404ing and every live token stops working on the next request, because the
+ * flag is read per-request rather than cached.
+ *
+ * Runs under the owner's session so RLS decides whose row this is; the `eq` is
+ * for clarity, not for access control.
+ */
+export async function setMcpEnabled(formData: FormData): Promise<void> {
+  const enabled = formData.get('enabled') === 'true';
+
+  const db = await supabaseServer();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return;
+
+  await db.from('owners').update({ mcp_enabled: enabled }).eq('id', user.id);
+
+  revalidatePath('/app/settings');
+}
+
+/**
+ * Revoke an app's MCP access.
+ *
+ * Two steps, deliberately in this order. The first update runs under the
+ * owner's session, so RLS is what proves the grant belongs to them — the action
+ * never asserts ownership itself. Only once the database has confirmed that by
+ * returning a row does the second step escalate to service_role to kill the
+ * tokens, which live in a table no browser session can reach.
+ *
+ * Revoking the grant alone would not be enough: a live access token is checked
+ * against its authorization on every request, but the refresh token would still
+ * be sitting in the client, and leaving dead credentials around invites exactly
+ * the kind of "revoked, but still works" bug this feature cannot afford.
+ */
+export async function disconnectApp(formData: FormData): Promise<void> {
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const db = await supabaseServer();
+  const { data } = await db
+    .from('mcp_authorizations')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id')
+    .maybeSingle();
+
+  if (data) await revokeAuthorization(data.id);
+
+  revalidatePath('/app/settings');
+}
+
+// ---------------------------------------------------------------------------
 // Data controls
 // ---------------------------------------------------------------------------
 
@@ -354,41 +415,6 @@ export async function purgeProjectData(_prev: ActionState, formData: FormData): 
   return { ok: true };
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function parseDomains(raw: string): string[] {
-  return raw
-    .split(/[\n,\s]+/)
-    .map((d) => d.trim().toLowerCase())
-    // People paste full URLs. Take the host and move on rather than rejecting.
-    .map((d) => d.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, ''))
-    .filter(Boolean);
-}
-
-// Not exported: every export from a 'use server' module must be an async
-// function that is safe to call over the network.
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50);
-}
-
-async function uniqueSlug(db: Awaited<ReturnType<typeof supabaseServer>>, base: string): Promise<string | null> {
-  const root = base || 'project';
-  // The slug column has a format constraint; a name of only symbols would
-  // produce an empty string and a confusing DB error instead of a clear one.
-  if (!/^[a-z0-9]/.test(root)) return null;
-
-  for (let i = 0; i < 50; i++) {
-    const candidate = i === 0 ? root : `${root}-${i + 1}`;
-    const { data } = await db.from('projects').select('id').eq('slug', candidate).maybeSingle();
-    if (!data) return candidate;
-  }
-  return `${root}-${Date.now().toString(36)}`;
-}
+// Slug, domain, and snippet rules live in @/lib/projects so the MCP server can
+// apply the identical ones — a 'use server' module can only export async
+// functions, so they cannot be shared from here.

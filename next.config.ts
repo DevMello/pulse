@@ -27,8 +27,26 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: '/script.js', destination: '/px.js' },
+
+      /**
+       * OAuth discovery lives at fixed /.well-known/ paths (RFC 8414, RFC 9728)
+       * that MCP clients probe without being told. A Next route segment cannot
+       * start with a dot, so the handlers live under /api/oauth and are mapped
+       * here.
+       *
+       * The suffixed forms matter: RFC 9728 says a resource at /api/mcp
+       * publishes its metadata at /.well-known/oauth-protected-resource/api/mcp,
+       * and clients differ on whether they try that or the bare path first.
+       * Serving both is a few lines and removes an entire category of
+       * "connector won't connect" with no diagnostic.
+       */
+      { source: '/.well-known/oauth-authorization-server', destination: '/api/oauth/authorization-server' },
+      { source: '/.well-known/oauth-authorization-server/:path*', destination: '/api/oauth/authorization-server' },
+      { source: '/.well-known/oauth-protected-resource', destination: '/api/oauth/protected-resource' },
+      { source: '/.well-known/oauth-protected-resource/:path*', destination: '/api/oauth/protected-resource' },
     ];
   },
+
   async redirects() {
     const showLanding = process.env.NEXT_PUBLIC_PULSE_SHOW_LANDING !== 'false';
     const showLive = process.env.NEXT_PUBLIC_PULSE_SHOW_LIVE !== 'false';

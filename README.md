@@ -98,6 +98,49 @@ Then, in your project: *"Add Pulse analytics — my instance is at https://pulse
 
 ---
 
+## MCP server
+
+The skill above writes the integration code but still needs you to go and make a project first. The MCP server closes that gap: connect it once, and your assistant can create the project, read back the ingest key, and hand the snippet straight to the skill — *"set up Pulse for acme.com"*, start to finish, without you opening the dashboard.
+
+It is **on by default** and needs no configuration — just `SUPABASE_SERVICE_ROLE_KEY`, which you already set for ingestion. Add `https://your-pulse.example.com/api/mcp` as a custom connector and you're done. It speaks OAuth 2.1 with PKCE and dynamic client registration, so there is no API key to create or paste: your assistant discovers the endpoints, sends you to a consent screen, and you approve it by name.
+
+| Client | How |
+|---|---|
+| Claude (web, desktop) | Settings → Connectors → **Add custom connector** → paste the URL |
+| ChatGPT | Settings → Connectors → **Create** → paste the URL |
+| Claude Code | `claude mcp add --transport http pulse https://your-pulse.example.com/api/mcp` |
+| Cursor, Zed, others | Any MCP client with remote HTTP + OAuth support |
+
+### What it can do
+
+Four tools, scoped to setup and nothing else:
+
+| Tool | Does |
+|---|---|
+| `list_projects` | Names, slugs, domains, timezones |
+| `create_project` | Creates a project, returns the key and a paste-ready snippet |
+| `get_project_key` | Ingest key + install snippets for one project |
+| `update_project_domains` | Replaces a project's domain allow-list |
+
+### What it deliberately can't do
+
+There is no tool to delete or archive a project, rotate an ingest key, read visitor or revenue data, or change public-page visibility. An assistant acting on a misread instruction should not be able to cause a loss you can't undo, and your analytics are not something a connected app needs to see. Those stay in the dashboard.
+
+The ingest key it returns is public by design — it ships in your page source, and the [domain allow-list](#privacy) is what actually prevents spoofed data — so it is safe for an agent to write into a repo.
+
+### Managing access
+
+Everything lives under **Connected apps** at `/app/settings`:
+
+- **The master switch.** Turning MCP off is immediate — discovery starts returning 404 and every live token stops working on the next request. It's a pause, not a purge: approved apps are kept, so turning it back on restores them without re-authorizing each one.
+- **Per-app disconnect.** One click kills that grant and every token under it.
+
+Access tokens last an hour. Refresh tokens rotate on every use, and presenting a used one is treated as theft — the whole grant is revoked on the spot.
+
+Leaving this on exposes an open dynamic-registration endpoint. That's what the MCP spec requires and is safe on its own: a registered client holds no access at all until you approve it by name, and unapproved registrations are swept away daily. If you'd still rather not run one, the switch is right there.
+
+---
+
 ## Try it before pointing it at a real site
 
 ```sh

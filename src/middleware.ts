@@ -68,8 +68,15 @@ export const config = {
      *              the hot path where an auth round trip would be pure cost)
      *  - /stats    (public page: anonymous by definition, and cached)
      *  - /px.js    (the tracker: a static asset)
+     *  - /.well-known (OAuth discovery: must be readable by an unauthenticated
+     *              MCP client, and a session round trip on it is pure latency
+     *              on the first thing a connector ever fetches)
      *  - static assets
+     *
+     * /oauth/authorize is deliberately *not* excluded — it needs the session
+     * cookie refreshed like any dashboard page, and handles its own redirect to
+     * /login so it can preserve the full OAuth request.
      */
-    '/((?!api|stats|px\\.js|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!api|stats|px\\.js|\\.well-known|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
