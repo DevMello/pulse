@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Card, PulseMark, Sparkline, Stat, BarList } from '@/components/ui';
 import { CodeBlock } from '@/components/snippet';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -41,6 +42,10 @@ const DEMO_SOURCES = [
 ];
 
 export default function Home() {
+  const showLanding = process.env.NEXT_PUBLIC_PULSE_SHOW_LANDING !== 'false';
+  const showLive = process.env.NEXT_PUBLIC_PULSE_SHOW_LIVE !== 'false';
+  if (!showLanding || !showLive) redirect('/app');
+
   const configured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );

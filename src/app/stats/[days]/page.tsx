@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { StatsView } from '../stats-view';
 
 /**
@@ -33,6 +33,10 @@ export async function generateMetadata({
 }
 
 export default async function StatsRangePage({ params }: { params: Promise<{ days: string }> }) {
+  const showLanding = process.env.NEXT_PUBLIC_PULSE_SHOW_LANDING !== 'false';
+  const showLive = process.env.NEXT_PUBLIC_PULSE_SHOW_LIVE !== 'false';
+  if (!showLanding || !showLive) redirect('/app');
+
   const { days } = await params;
   const parsed = Number(days);
 

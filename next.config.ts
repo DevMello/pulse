@@ -6,8 +6,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // The tracker is a static, immutable asset. Long edge cache, revalidate
-        // in the background so a redeploy propagates without a stampede.
         source: '/px.js',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' },
@@ -28,18 +26,27 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      // Friendly aliases so owners can serve the snippet from a path that
-      // ad-blockers key on less aggressively than "/analytics.js".
       { source: '/script.js', destination: '/px.js' },
     ];
   },
   async redirects() {
-    return [
-      // Traffic was a second page holding the same ten breakdowns the overview's
-      // panels now show. It's gone rather than duplicated, but people have it
-      // bookmarked and linked from their own notes.
+    const showLanding = process.env.NEXT_PUBLIC_PULSE_SHOW_LANDING !== 'false';
+    const showLive = process.env.NEXT_PUBLIC_PULSE_SHOW_LIVE !== 'false';
+    const showPublic = showLanding && showLive;
+
+    const rules = [
       { source: '/app/p/:slug/traffic', destination: '/app/p/:slug', permanent: false },
     ];
+
+    if (!showPublic) {
+      rules.push(
+        { source: '/', destination: '/app', permanent: false },
+        { source: '/stats', destination: '/app', permanent: false },
+        { source: '/stats/:path*', destination: '/app', permanent: false },
+      );
+    }
+
+    return rules;
   },
 };
 

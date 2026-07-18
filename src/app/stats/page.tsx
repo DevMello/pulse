@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { StatsView } from './stats-view';
 
 /**
@@ -16,5 +17,9 @@ export const metadata: Metadata = {
 };
 
 export default function StatsPage() {
+  const showLanding = process.env.NEXT_PUBLIC_PULSE_SHOW_LANDING !== 'false';
+  const showLive = process.env.NEXT_PUBLIC_PULSE_SHOW_LIVE !== 'false';
+  if (!showLanding || !showLive) redirect('/app');
+
   return <StatsView days={30} />;
 }
