@@ -11,7 +11,7 @@ Pulse does three jobs:
 The data lives in **your** Supabase. Nothing leaves your infrastructure. There's no vendor, no per-event billing, and no third-party pixel touching your visitors.
 
 ```html
-<script defer data-key="YOUR_KEY" src="https://your-pulse.vercel.app/px.js"></script>
+<script defer data-key="YOUR_KEY" src="https://pulse.devmello.xyz/px.js"></script>
 ```
 
 That's the whole integration.
@@ -186,7 +186,7 @@ Masking happens in the database, not in React — hidden means never sent.
 Embeddable badge, works in a README:
 
 ```html
-<img src="https://your-pulse.vercel.app/api/badge/your-slug" alt="Live visitors" height="20">
+<img src="https://pulse.devmello.xyz/api/badge/your-slug" alt="Live visitors" height="20">
 ```
 
 ---

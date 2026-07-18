@@ -13,7 +13,7 @@ import { init, teardown, pageview, track, trackRevenue, type PulseConfig } from 
  *
  * ```tsx
  * function App() {
- *   usePulse({ key: 'abc123', host: 'https://pulse.example.com' });
+ *   usePulse({ key: 'abc123', host: 'https://pulse.devmello.xyz' });
  *   return <Routes />;
  * }
  * ```

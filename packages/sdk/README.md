@@ -5,7 +5,7 @@ Typed client for [Pulse](https://github.com/DevMello/pulse) — privacy-first, s
 **This package is optional.** The plain script tag does everything the SDK does:
 
 ```html
-<script defer data-key="YOUR_KEY" src="https://your-pulse.vercel.app/px.js"></script>
+<script defer data-key="YOUR_KEY" src="https://pulse.devmello.xyz/px.js"></script>
 ```
 
 Use the SDK if you'd rather have typed helpers and automatic route tracking wired into your framework.
@@ -23,7 +23,7 @@ import { init, track, trackRevenue } from '@pulse/sdk';
 
 init({
   key: 'YOUR_INGEST_KEY',
-  host: 'https://your-pulse.vercel.app',
+  host: 'https://pulse.devmello.xyz',
 });
 
 track('signup', { plan: 'pro' });
@@ -47,7 +47,7 @@ trackRevenue('purchase', { amount: 29, currency: 'USD' }, { plan: 'pro' });
 import { usePulse, track } from '@pulse/sdk/react';
 
 function App() {
-  usePulse({ key: 'YOUR_KEY', host: 'https://your-pulse.vercel.app' });
+  usePulse({ key: 'YOUR_KEY', host: 'https://pulse.devmello.xyz' });
   return <button onClick={() => track('cta_click')}>Start</button>;
 }
 ```
@@ -62,7 +62,7 @@ import { usePathname } from 'next/navigation';
 import { usePulse, usePulsePageviews } from '@pulse/sdk/react';
 
 export function Analytics() {
-  usePulse({ key: 'YOUR_KEY', host: 'https://your-pulse.vercel.app', autoPageviews: false });
+  usePulse({ key: 'YOUR_KEY', host: 'https://pulse.devmello.xyz', autoPageviews: false });
   usePulsePageviews(usePathname());
   return null;
 }
@@ -73,7 +73,7 @@ export function Analytics() {
 ```ts
 import { createPulse } from '@pulse/sdk/vue';
 
-app.use(createPulse({ key: 'YOUR_KEY', host: 'https://your-pulse.vercel.app' }, router));
+app.use(createPulse({ key: 'YOUR_KEY', host: 'https://pulse.devmello.xyz' }, router));
 ```
 
 Passing the router lets `afterEach` drive pageviews, which is more reliable than patching History. `$pulse` is available in templates:
@@ -91,7 +91,7 @@ Passing the router lets `afterEach` drive pageviews, which is more reliable than
   import { page } from '$app/stores';
   import { pulse } from '@pulse/sdk/svelte';
 
-  const stop = pulse({ key: 'YOUR_KEY', host: 'https://your-pulse.vercel.app' }, page);
+  const stop = pulse({ key: 'YOUR_KEY', host: 'https://pulse.devmello.xyz' }, page);
   onDestroy(stop);
 </script>
 ```

@@ -21,7 +21,7 @@ interface AppLike {
  * ```ts
  * import { createPulse } from '@pulse/sdk/vue';
  *
- * app.use(createPulse({ key: 'abc123', host: 'https://pulse.example.com' }, router));
+ * app.use(createPulse({ key: 'abc123', host: 'https://pulse.devmello.xyz' }, router));
  * ```
  *
  * Adds `$pulse` for use in templates: `@click="$pulse.track('cta_click')"`.

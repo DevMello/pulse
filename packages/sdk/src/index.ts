@@ -13,7 +13,7 @@
 export interface PulseConfig {
   /** The project's public ingest key. */
   key: string;
-  /** Collector origin, e.g. https://pulse.example.com */
+  /** Collector origin, e.g. https://pulse.devmello.xyz */
   host: string;
   /** Track pageviews automatically on route changes. Default true. */
   autoPageviews?: boolean;

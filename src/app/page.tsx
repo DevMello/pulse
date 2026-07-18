@@ -144,7 +144,7 @@ export default function Home() {
             fingerprinting library wearing a trench coat.
           </p>
           <div className="mt-5 text-left">
-            <CodeBlock code={`<script defer data-key="YOUR_KEY" src="https://your-pulse.vercel.app/px.js"></script>`} />
+            <CodeBlock code={`<script defer data-key="YOUR_KEY" src="https://pulse.devmello.xyz/px.js"></script>`} />
           </div>
         </section>
 

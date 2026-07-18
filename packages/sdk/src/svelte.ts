@@ -17,7 +17,7 @@ interface Readable<T> {
  * import { page } from '$app/stores';
  * import { pulse } from '@pulse/sdk/svelte';
  *
- * const stop = pulse({ key: 'abc123', host: 'https://pulse.example.com' }, page);
+ * const stop = pulse({ key: 'abc123', host: 'https://pulse.devmello.xyz' }, page);
  * onDestroy(stop);
  * ```
  *
