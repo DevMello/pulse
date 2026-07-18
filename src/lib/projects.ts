@@ -61,7 +61,7 @@ export function installSnippet(ingestKey: string, origin: string): string {
 
 export function sdkSnippet(ingestKey: string, origin: string): string {
   return [
-    `npm i @pulse/sdk`,
+    `npm install github:DevMello/pulse#sdk-dist`,
     ``,
     `import { init, track } from '@pulse/sdk';`,
     ``,
