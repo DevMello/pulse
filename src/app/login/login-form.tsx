@@ -51,43 +51,48 @@ export function LoginForm({
     setError(null);
     setBusy(true);
 
-    const supabase = supabaseBrowser();
+    try {
+      const supabase = supabaseBrowser();
 
-    const { data, error: authError } = isSignup
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: authError } = isSignup
+        ? await supabase.auth.signUp({ email, password })
+        : await supabase.auth.signInWithPassword({ email, password });
 
-    if (authError) {
-      setError(authError.message);
+      if (authError) {
+        setError(authError.message);
+        setBusy(false);
+        return;
+      }
+
+      // signUp with "Confirm email" still enabled returns no session — the account
+      // exists but is unusable until a link is clicked, which is exactly the email
+      // dependency password auth is meant to avoid. Say so plainly.
+      if (!data.session) {
+        setError(
+          'Account created, but this Supabase project still requires email confirmation. ' +
+            'Turn off "Confirm email" in Authentication → Providers → Email, then sign in.',
+        );
+        setMode('signin');
+        setBusy(false);
+        return;
+      }
+
+      // The browser client has written the session cookie; make sure an owners row
+      // exists (and that the trigger allows this account to be the owner).
+      const claim = await claimOwnership();
+      if (!claim.ok) {
+        await supabase.auth.signOut();
+        setError(claim.error);
+        setBusy(false);
+        return;
+      }
+
+      router.push(safeNext(next));
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
       setBusy(false);
-      return;
     }
-
-    // signUp with "Confirm email" still enabled returns no session — the account
-    // exists but is unusable until a link is clicked, which is exactly the email
-    // dependency password auth is meant to avoid. Say so plainly.
-    if (!data.session) {
-      setError(
-        'Account created, but this Supabase project still requires email confirmation. ' +
-          'Turn off "Confirm email" in Authentication → Providers → Email, then sign in.',
-      );
-      setMode('signin');
-      setBusy(false);
-      return;
-    }
-
-    // The browser client has written the session cookie; make sure an owners row
-    // exists (and that the trigger allows this account to be the owner).
-    const claim = await claimOwnership();
-    if (!claim.ok) {
-      await supabase.auth.signOut();
-      setError(claim.error);
-      setBusy(false);
-      return;
-    }
-
-    router.push(safeNext(next));
-    router.refresh();
   }
 
   return (
