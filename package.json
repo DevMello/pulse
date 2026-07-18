@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "build:tracker": "node scripts/build-tracker.mjs",
     "size": "node scripts/build-tracker.mjs --report",
+    "publish:sdk-branch": "bash scripts/publish-sdk-branch.sh",
     "test": "vitest run",
     "test:watch": "vitest"
   },

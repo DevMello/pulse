@@ -12,8 +12,14 @@ Use the SDK if you'd rather have typed helpers and automatic route tracking wire
 
 ## Install
 
+Not on npm yet — install directly from GitHub instead. The `sdk-dist` branch holds the prebuilt package, kept in sync via `npm run publish:sdk-branch` in the main repo.
+
 ```sh
-npm i @pulse/sdk
+npm install github:DevMello/pulse#sdk-dist
+# or
+pnpm add github:DevMello/pulse#sdk-dist
+# or
+yarn add github:DevMello/pulse#sdk-dist
 ```
 
 ## Core
