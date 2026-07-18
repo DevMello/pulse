@@ -37,6 +37,11 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // Server actions send POST requests. Redirecting one returns the redirect
+  // to the client's server action handler instead of an RSC payload, which
+  // throws "An unexpected response was received from the server."
+  if (request.method === 'POST') return response;
+
   if (path.startsWith('/app') && !user) {
     const login = request.nextUrl.clone();
     login.pathname = '/login';
