@@ -175,19 +175,6 @@ export function LoginForm({
         </p>
       ) : null}
 
-      {canSignUp ? (
-        <button
-          type="button"
-          onClick={() => {
-            setMode(isSignup ? 'signin' : 'signup');
-            setConfirm('');
-            setError(null);
-          }}
-          className="block w-full text-center text-xs text-text-subtle underline hover:text-text"
-        >
-          {isSignup ? 'Already set up? Sign in' : 'First run? Create the owner account'}
-        </button>
-      ) : null}
     </div>
   );
 }
