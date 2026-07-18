@@ -6,15 +6,16 @@ import { PulseMark } from '@/components/ui';
 export const metadata: Metadata = { title: 'Sign in' };
 
 /**
- * Whether this instance already has an owner. Read through the anon RPC because
- * the login page has no session and `owners` is RLS-locked. If we can't tell
- * (unconfigured deploy, missing migration), fall back to showing the sign-up
- * path — the database trigger still refuses a second owner, so the worst case
- * is a stranger seeing a create button that can't succeed.
+ * Whether this instance already has an account. Read through the anon RPC
+ * because the login page has no session and `auth.users` is inaccessible from
+ * the public schema. If we can't tell (unconfigured deploy, missing migration),
+ * fall back to showing the sign-up path — the database trigger still refuses a
+ * second owner, so the worst case is a stranger seeing a create button that
+ * can't succeed.
  */
 async function instanceIsClaimed(): Promise<boolean> {
   try {
-    const { data, error } = await supabasePublic().rpc('pulse_owner_exists');
+    const { data, error } = await supabasePublic().rpc('pulse_account_exists');
     return error ? false : Boolean(data);
   } catch {
     return false;

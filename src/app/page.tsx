@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { Card, PulseMark, Sparkline, Stat, BarList } from '@/components/ui';
 import { CodeBlock } from '@/components/snippet';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { supabasePublic } from '@/lib/supabase/server';
 
 /**
  * The landing page.
@@ -42,19 +40,12 @@ const DEMO_SOURCES = [
   { label: 'Direct / none', value: 1930 },
 ];
 
-export default async function Home() {
+export default function Home() {
   const configured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
 
   if (!configured) return <SetupNeeded />;
-
-  try {
-    const { data, error } = await supabasePublic().rpc('pulse_owner_exists');
-    if (!error && data) redirect('/login');
-  } catch {
-    // RPC unavailable — show the landing page for setup
-  }
 
   return (
     <div className="min-h-screen">
