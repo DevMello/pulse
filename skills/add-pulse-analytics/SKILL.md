@@ -6,8 +6,11 @@ description: >-
   project, add analytics / pageview tracking / visitor stats to a site, instrument custom
   events or revenue tracking with Pulse, or mentions @pulse/sdk or px.js. Covers plain
   HTML and static sites, React, Next.js, Vue, Svelte/SvelteKit, and any SSG, plus
-  verification and troubleshooting. Reach for it even if the user just says "hook up my
-  Pulse instance" or "track signups on my site with pulse" without the word "analytics".
+  verification and troubleshooting. If a Pulse MCP server is connected, the skill uses it
+  to create the project and fetch the ingest key itself, so end-to-end requests like "set
+  up Pulse for acme.com" work without any dashboard visit. Reach for it even if the user
+  just says "hook up my Pulse instance" or "track signups on my site with pulse" without
+  the word "analytics".
 license: MIT
 metadata:
   author: DevMello
@@ -22,17 +25,27 @@ enrichment happens server-side. No cookies, nothing stored on the device, no con
 banner needed. A correct integration is small — one script tag, or one `init()` call —
 so the goal is a minimal diff, not a wrapper layer.
 
-## Step 1 — Gather what you cannot guess
+## Step 1 — Get a project and ingest key
 
-Two values come from the user's Pulse dashboard (Project → Settings). If they weren't
-provided, ask before writing code:
+Every integration needs two values: the **host** (the origin of the user's Pulse
+deployment, e.g. `https://pulse.example.com`) and the project's **ingest key**.
 
-1. **Host** — the origin of their Pulse deployment, e.g. `https://pulse.example.com`.
-2. **Ingest key** — the project's public ingest key. It is public **by design**: it ships
-   in client code, and the project's domain allow-list (not key secrecy) is what blocks
-   forged events. So it needs no secret manager — but never invent a value. If the user
-   wants to proceed without it, use the placeholder `YOUR_INGEST_KEY` and say clearly at
-   the end that it must be replaced.
+**Check for the Pulse MCP server first.** Pulse instances expose an MCP server, and if
+the user has connected it, your available tools include `list_projects`,
+`get_project_key`, `create_project`, and `update_project_domains` from a server named
+`pulse` (clients usually prefix the names, e.g. `mcp__pulse__list_projects`). When those
+tools are present, validate with one `list_projects` call — if it succeeds, you can
+provision the project, key, and host yourself and skip asking the user for anything but
+which site this is. Read [references/mcp-provisioning.md](references/mcp-provisioning.md)
+for the workflow. If the call fails with an auth or scope error, tell the user to
+reconnect Pulse in their client and fall back to asking, below — don't fight OAuth.
+
+**No MCP server? Ask the user.** Both values come from the Pulse dashboard
+(Project → Settings). The key is public **by design**: it ships in client code, and the
+project's domain allow-list (not key secrecy) is what blocks forged events. So it needs
+no secret manager — but never invent a value. If the user wants to proceed without it,
+use the placeholder `YOUR_INGEST_KEY` and say clearly at the end that it must be
+replaced.
 
 Then survey the project before choosing an approach:
 
@@ -122,8 +135,10 @@ public build-time env vars, follow suit (`NEXT_PUBLIC_PULSE_KEY`, `VITE_PULSE_KE
    flag afterwards so dev traffic doesn't pollute production data.
 3. On an SPA, navigate between routes and confirm exactly **one** request per navigation
    (pageviews are deduped against the last URL sent, so a double driver shows up here).
-4. Remind the user that their production domain must be on the project's domain
-   allow-list in the Pulse dashboard, or events will be rejected server-side.
+4. The production domain must be on the project's domain allow-list, or events will be
+   rejected server-side. With the MCP server connected, check the project's `domains`
+   yourself and fix the list with `update_project_domains` (it **replaces** the list —
+   send the complete set). Otherwise, remind the user to add it in the Pulse dashboard.
 
 If events don't show up: localhost skipping, a wrong `key`/`host`, a missing allow-list
 entry, or a `localStorage.pulse_ignore` flag in that browser are the usual causes.

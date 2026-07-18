@@ -23,7 +23,7 @@ location:
 | OpenAI Codex | `~/.codex/skills/add-pulse-analytics/` |
 | Other tools | Wherever the tool documents its skills directory |
 
-Or install it straight from this repo with the
+Or install it straight from the Pulse repo with the
 [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```bash
@@ -41,9 +41,16 @@ In your web project, ask your agent things like:
 Have your Pulse deployment origin and the project's public ingest key
 (dashboard → Project → Settings) ready — the skill will ask for them if missing.
 
+Better yet, connect your instance's **MCP server** (`https://<your-host>/api/mcp`; in
+Claude Code: `claude mcp add --transport http pulse https://<your-host>/api/mcp`). With
+it connected, the skill provisions everything itself — creates the project, reads back
+the key, sets the domain allow-list — so *"Set up Pulse analytics for this app, it's
+deployed at acme.com"* works end to end without a dashboard visit.
+
 ## Contents
 
-- `SKILL.md` — workflow: gather inputs → detect stack → choose path → apply → verify
+- `SKILL.md` — workflow: get project/key (via MCP or the user) → detect stack → choose path → apply → verify
+- `references/mcp-provisioning.md` — detecting the Pulse MCP server and provisioning projects/keys through it
 - `references/script-tag.md` — `px.js` tag, `data-*` config, `pulse()` global, pre-load stub
 - `references/npm-sdk.md` — `@pulse/sdk` install, core API, config, TypeScript types
 - `references/frameworks.md` — React, Next.js, Vue, Svelte/SvelteKit adapters
